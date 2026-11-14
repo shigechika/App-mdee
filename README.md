@@ -21,6 +21,7 @@ mdee - em·dee, Markdown Easy on the Eyes
          --[no-]trim        trim cell spaces (default: on)
          --[no-]nup         nup paged output (default: on)
      -V  --parallel         show files side by side
+     -L  --[no-]lateral     all pages in one row, scrolled sideways
          --[no-]rule        use Unicode rules for tables (default: on)
     --ts --table-style=#    table style: lattice, 3line or simple (default: lattice)
          --cat-v            visualize whitespace via cat-v
@@ -675,6 +676,21 @@ bold text, etc.).
     one after another.  The number of panes is the number of files
     unless `--pane` is given.  Ignored with a single file.
 
+- **-L**, **--\[no-\]lateral**
+
+    Put all the pages in one row, given to [nup(1)](https://metacpan.org/pod/App%3A%3Anup) as its
+    `--lateral` (App::nup 1.14 or later).  The screen shows as many
+    pages as without it, and space and `b` of `less` move by the
+    screen as usual, while `h` and `l` move by one page; see [nup(1)](https://metacpan.org/pod/App%3A%3Anup)
+    for the keys and the build of `less` that keeps the pages at the
+    edge of the screen.  A single pane goes to nup as well, so that the
+    pages can be shifted one by one.  It cannot be used with `--width`,
+    and nup refuses it with rows (`-C2,2`, `-R`, `-G`), `--parallel`
+    with two or more files, and PDF output.  `default[lateral]=1` in the
+    configuration file makes it the default; the default is left out
+    where the option cannot be used, and `default[width]` is not used
+    with it.
+
 - **-C** _C_\[,_R_\], **--pane**=_C_\[,_R_\]
 
     Set the number of columns (panes).  The number of rows may follow
@@ -875,6 +891,7 @@ This is a shell script that can set defaults and override colors:
     default[width]=170               # set default output width
     default[fold_width]=80           # set default fold width
     default[refill]=1                # join paragraph lines
+    default[lateral]=1               # all pages in one row
     default[base_color]='DarkCyan'   # set default base color
 
 The `default` associative array supports the following keys:
@@ -885,6 +902,7 @@ The `default` associative array supports the following keys:
 - `default[width]` - Corresponds to `--width` (e.g., `170`)
 - `default[fold_width]` - Corresponds to `--fold-width` (e.g., `80`)
 - `default[refill]` - Corresponds to `--refill` (`1` to enable)
+- `default[lateral]` - Corresponds to `--lateral` (`1` to enable)
 - `default[pane_width]` - Corresponds to `--pane-width` (e.g., `100`)
 - `default[pane]` - Corresponds to `--pane` (e.g., `2` or `2,2`)
 - `default[base_color]` - Corresponds to `--base-color` (e.g., `DarkCyan`)

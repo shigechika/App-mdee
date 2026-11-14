@@ -145,6 +145,9 @@ The `default` associative array supports:
 | `default[width]` | `--width` | `170` |
 | `default[fold_width]` | `--fold-width` | `80` |
 | `default[base_color]` | `--base-color` | `DarkCyan` |
+| `default[lateral]` | `--lateral` | `1` |
+
+`default[lateral]` is left out where nup cannot make the row (`-w`, rows, `--parallel` with two or more files, PDF), while `-L` given with `-w` is an error; with `--lateral` set either way, `default[width]` is not used, because `-w` after the file name would make rows of the pages again.
 
 Priority: command-line option > config default > built-in default.
 

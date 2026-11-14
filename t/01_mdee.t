@@ -816,6 +816,49 @@ subtest q(output width option) => sub {
     like($plain, qr/fold_width=93\b/, q(without -w the fold width comes from the terminal));
 };
 
+# Test: --lateral (-L) gives nup --lateral
+subtest q(lateral option) => sub {
+    my $help = `$mdee --help 2>&1`;
+    like($help, qr/--\[no-\]lateral/, q(--help shows --lateral option));
+
+    my $short = `COLUMNS=300 $mdee -ddn -L $test_md 2>&1`;
+    like($short, qr/debug: nup .*--lateral/, q(-L gives nup --lateral));
+    my $long = `COLUMNS=300 $mdee -ddn --lateral $test_md 2>&1`;
+    like($long, qr/debug: nup .*--lateral/, q(--lateral gives nup --lateral));
+    my $plain = `COLUMNS=300 $mdee -ddn $test_md 2>&1`;
+    unlike($plain, qr/--lateral/, q(without it nup gets no --lateral));
+
+    # a single pane goes to nup as well, to be shifted page by page
+    my $one = `COLUMNS=100 $mdee -ddn -L $test_md 2>&1`;
+    like($one, qr/debug: nup .*--lateral/, q(-L with one pane runs nup));
+    unlike($one, qr/--no-paginate/, q(-L with one pane does not go to the pager directly));
+
+    my $width = `COLUMNS=300 $mdee -ddn -L -w 180 $test_md 2>&1`;
+    like($width, qr/--lateral cannot be used with --width/, q(-L with -w is an error));
+
+    my $tmpdir = File::Temp->newdir;
+    my $config_dir = "$tmpdir/mdee";
+    mkdir $config_dir or die;
+    my $config = sub {
+        open my $fh, '>', "$config_dir/config.sh" or die;
+        print $fh @_;
+        close $fh;
+    };
+    my $run = sub { `COLUMNS=300 XDG_CONFIG_HOME=$tmpdir $mdee -ddn --mode=light $_[0] 2>&1` };
+
+    $config->("default[lateral]=1\n");
+    like($run->($test_md), qr/debug: nup .*--lateral/, q(default[lateral]=1 gives nup --lateral));
+    unlike($run->("--no-lateral $test_md"), qr/--lateral/, q(--no-lateral overrides default[lateral]));
+    unlike($run->("-w 180 $test_md"), qr/--lateral/, q(default[lateral] is left out with -w));
+    unlike($run->("-C2,2 $test_md"), qr/--lateral/, q(default[lateral] is left out with rows));
+    unlike($run->("-V $test_md $test_md"), qr/--lateral/, q(default[lateral] is left out with --parallel));
+
+    $config->("default[lateral]=1\ndefault[width]=180\n");
+    my $both = $run->($test_md);
+    like($both, qr/debug: nup .*--lateral/, q(default[lateral] wins over default[width]));
+    unlike($both, qr/debug: nup .*-w 180/, q(default[width] is not used with --lateral));
+};
+
 # Test: output device (-T) and output file (-o)
 subtest 'device and output' => sub {
     plan skip_all => 'ansi2pdf 0.1.3 is not available'

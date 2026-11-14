@@ -40,6 +40,7 @@ mdee - em·dee, Markdown Easy on the Eyes
          --[no-]trim        trim cell spaces (default: on)
          --[no-]nup         nup paged output (default: on)
      -V  --parallel         show files side by side
+     -L  --[no-]lateral     all pages in one row, scrolled sideways
          --[no-]rule        use Unicode rules for tables (default: on)
     --ts --table-style=#    table style: lattice, 3line or simple (default: lattice)
          --cat-v            visualize whitespace via cat-v
@@ -190,6 +191,7 @@ declare -A OPTS=(
     [           trim |               # trim table cell spaces]=1
     [            nup |               # use nup               ]=_
     [       parallel | V             # files side by side    ]=
+    [        lateral | L             # all pages in one row  ]=_
     [           rule |               # table rule lines      ]=_
     [    table-style | ts :          # table style           ]=lattice
     [          width | w  : =i       # output width          ]=0
@@ -371,10 +373,27 @@ fi
     die "$pane: invalid number of panes (expected C or C,R)"
 pane=${BASH_REMATCH[1]} _rows=${BASH_REMATCH[3]}
 
+# --lateral (-L) puts all the pages in one row, as wide as the screen
+# shows: explicit option > config default.  nup refuses it with rows,
+# --parallel and PDF, and -w after the file name would make rows of it
+# again, so the config default is left out with them, and -w is an
+# error with the option given.
+if [[ $lateral == _ ]]; then
+    lateral=${default[lateral]:-}
+    if [[ $lateral ]] && { (( width > 0 )) || [[ $_rows || $_paper || $output ]] ||
+           { [[ ${parallel:-} ]] && (( $# >= 2 )); } ||
+           [[ " ${pass_nup[*]} " =~ \ --(row|grid)= ]]; }; then
+        lateral=
+    fi
+elif [[ $lateral ]] && (( width > 0 )); then
+    die "--lateral cannot be used with --width"
+fi
+
 # Output width: explicit option (non-zero) > config default > terminal width
 # On paper, the config default is not used, and the width of the paper
-# takes the place of the terminal width.
-(( width == 0 )) && [[ ! $_paper ]] && width=${default[width]:-0}
+# takes the place of the terminal width.  With --lateral the screen
+# gives the width, as for nup.
+(( width == 0 )) && [[ ! $_paper && ! $lateral ]] && width=${default[width]:-0}
 (( fold_width == 0 )) && fold_width=${default[fold_width]:-0}
 # tput reads the size from stderr when stdout is captured, so do not
 # redirect it; without TERM (docker run without a tty) tput only
@@ -650,6 +669,7 @@ pass_nup+=("--runin=$runin" "--runout=$runout" "--boundary=$boundary")
 # Add pane/pane-width to pass_nup
 (( pane_width != 85 )) && pass_nup+=("--pane-width=$pane_width")
 (( pane != 0 ))        && pass_nup+=("--pane=$pane${_rows:+,$_rows}")
+[[ $lateral ]]         && pass_nup+=(--lateral)
 [[ $device ]]          && pass_nup+=(-T "$device")
 [[ $output ]]          && pass_nup+=(-o "$output")
 
@@ -661,9 +681,9 @@ declare -a stages=(run_greple)
 [[ ${cat_v:-} ]] && stages+=(run_cat_v)
 if [[ $nup ]]; then
     # a single pane goes to the pager, unless nup has to write the
-    # output to PDF or to a file
+    # output to PDF or to a file, or to put the pages in one row
     if (( _cols == 1 )) && [[ ! ${_nup_explicit:-} ]] && [[ ! ${parallel:-} ]] \
-        && [[ ! $_paper && ! $output ]]; then
+        && [[ ! $_paper && ! $output && ! $lateral ]]; then
         stages+=(run_column run_pager)
     else
         stages+=(run_nup)
@@ -1364,6 +1384,21 @@ Show two or more files side by side, one pane per file, instead of
 one after another.  The number of panes is the number of files
 unless C<--pane> is given.  Ignored with a single file.
 
+=item B<-L>, B<--[no-]lateral>
+
+Put all the pages in one row, given to L<nup(1)|App::nup> as its
+C<--lateral> (App::nup 1.14 or later).  The screen shows as many
+pages as without it, and space and C<b> of C<less> move by the
+screen as usual, while C<h> and C<l> move by one page; see L<nup(1)|App::nup>
+for the keys and the build of C<less> that keeps the pages at the
+edge of the screen.  A single pane goes to nup as well, so that the
+pages can be shifted one by one.  It cannot be used with C<--width>,
+and nup refuses it with rows (C<-C2,2>, C<-R>, C<-G>), C<--parallel>
+with two or more files, and PDF output.  C<default[lateral]=1> in the
+configuration file makes it the default; the default is left out
+where the option cannot be used, and C<default[width]> is not used
+with it.
+
 =item B<-C> I<C>[,I<R>], B<--pane>=I<C>[,I<R>]
 
 Set the number of columns (panes).  The number of rows may follow
@@ -1579,6 +1614,7 @@ This is a shell script that can set defaults and override colors:
     default[width]=170               # set default output width
     default[fold_width]=80           # set default fold width
     default[refill]=1                # join paragraph lines
+    default[lateral]=1               # all pages in one row
     default[base_color]='DarkCyan'   # set default base color
 
 The C<default> associative array supports the following keys:
@@ -1596,6 +1632,8 @@ The C<default> associative array supports the following keys:
 =item C<default[fold_width]> - Corresponds to C<--fold-width> (e.g., C<80>)
 
 =item C<default[refill]> - Corresponds to C<--refill> (C<1> to enable)
+
+=item C<default[lateral]> - Corresponds to C<--lateral> (C<1> to enable)
 
 =item C<default[pane_width]> - Corresponds to C<--pane-width> (e.g., C<100>)
 
