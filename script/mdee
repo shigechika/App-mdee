@@ -284,7 +284,7 @@ version() {
 }
 
 pager() {
-    [[ $pager ]] && pass_nup+=("--pager=$pager") || pass_nup+=("--no-pager")
+    [[ ${pager:-} ]] && pass_nup+=("--pager=$pager") || pass_nup+=("--no-pager")
 }
 
 runlen() { runin=$2 runout=$2; }
