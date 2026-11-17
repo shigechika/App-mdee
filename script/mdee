@@ -163,7 +163,9 @@ mdee - em·dee, Markdown Easy on the Eyes
 Usage: $myname [ options ] file ...
 END
 
-declare -a pass_nup=(--document --no-filename)
+# --no-highlight: the text is colored by mdee, and nup does not put
+# the colors of a highlighter on it
+declare -a pass_nup=(--document --no-filename --no-highlight)
 declare -a pass_md=()
 declare -a _config=()
 declare -A show=()
