@@ -176,7 +176,7 @@ declare -A config=()
 declare -a theme=(hashed nomark markcell doubleline)
 declare -A adjust=([light]='=y25' [dark]='=y80')
 declare -A OPTS=(
-    [&REQUIRE]=0.7.2 [&USAGE]="$USAGE"
+    [&REQUIRE]=1.2.0 [&USAGE]="$USAGE"
     [           help | h   !         # show help             ]=
     [        version |     !         # show version          ]=
     [          debug | d  +          # debug level           ]=0
