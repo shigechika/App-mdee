@@ -1295,7 +1295,7 @@ Kazumasa Utashiro
 
 =head1 LICENSE
 
-Copyright 2026 Kazumasa Utashiro.
+Copyright © 2026 Kazumasa Utashiro.
 
 This software is released under the MIT License.
 L<https://opensource.org/licenses/MIT>
