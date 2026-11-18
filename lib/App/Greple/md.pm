@@ -412,7 +412,7 @@ are used instead, and these are emphasis.
     code_mark    L20                L10
     code_tick    L15/L23            L15/L05
     code_info    ${base_name}=y70   L10
-    code_block   /L23;E             /L05;E
+    code_block   /L24;E             /L05;E
     code_inline  L00/L23            L25/L05
     meta_mark    L15/L10E           L10/L15E
     meta_block   L25/L12E           L00/L13E
@@ -579,7 +579,7 @@ my %default_colors = (
     code_mark       => 'L20',
     code_tick       => 'L15/L23',
     code_info       => '${base_name}=y70',
-    code_block      => '/L23;E',
+    code_block      => '/L24;E',
     code_inline     => 'L00/L23',
     meta_mark       => 'L15/L10E',
     meta_block      => 'L25/L12E',
