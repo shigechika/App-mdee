@@ -337,6 +337,19 @@ and C<highlight=sourcehighlight> (C<gnu>) or C<highlight=skylighting>
 (C<sky>) is the one of the name.  All the blocks of a file are given
 to the highlighter at once, and each is colored by itself.
 
+The language is also the first class in braces, as pandoc takes it
+(C<```{.perl .numberLines}>).
+
+A block which has parts is colored part by part, when
+L<Text::ANSI::Highlight> has a module for it.  A block of
+L<pandoc-embedz|https://github.com/tecolicom/pandoc-embedz>
+(C<```embedz>, C<```{.embedz data=file.csv}>) has a configuration in
+YAML, a template of Jinja2 and data: they are colored by their
+languages, in the backgrounds of C<code_config>, C<code_block> and
+C<code_data>, and the lines of C<---> between them have no color.
+The lines of a part labelled I<NAME> by the module are in the color
+C<code_I<NAME>>, and in C<code_block> when it is not defined.
+
 A block is shown as it is when it has no language, when the
 highlighter does not know the language, and when the module, the
 highlighter or its command (C<pandoc>, C<source-highlight>,
@@ -412,7 +425,9 @@ are used instead, and these are emphasis.
     code_mark    L20                L10
     code_tick    L15/L23            L15/L05
     code_info    ${base_name}=y70   L10
-    code_block   /L24;E             /L05;E
+    code_block   /L24;E             /L03;E
+    code_config  /#ECE9F7;E         /#1C1B24;E
+    code_data    /#E3F1EA;E         /#181E1A;E
     code_inline  L00/L23            L25/L05
     meta_mark    L15/L10E           L10/L15E
     meta_block   L25/L12E           L00/L13E
@@ -422,6 +437,10 @@ C<code_tick> color.  Multi-backtick delimiters are collapsed to a
 single pair with optional surrounding spaces stripped (per CommonMark).
 The open/close markers can be customized via C<tick_open>/C<tick_close>
 config parameters.
+
+C<code_config> and C<code_data> are the backgrounds of the
+configuration and the data in a block of pandoc-embedz (see
+L</Syntax Highlight of Code>).
 
 C<meta_mark> and C<meta_block> color the delimiter lines and the
 body of front matter (see L</Front Matter>), the delimiter lines in
@@ -524,6 +543,7 @@ use App::Greple::md::Blocks qw(blocks);
 
 my @color_labels = qw(
     code_mark code_tick code_info code_block code_inline
+    code_config code_template code_data
     meta_mark meta_block
     comment link image image_link
     h1 h2 h3 h4 h5 h6
@@ -580,6 +600,8 @@ my %default_colors = (
     code_tick       => 'L15/L23',
     code_info       => '${base_name}=y70',
     code_block      => '/L24;E',
+    code_config     => '/#ECE9F7;E',
+    code_data       => '/#E3F1EA;E',
     code_inline     => 'L00/L23',
     meta_mark       => 'L15/L10E',
     meta_block      => 'L25/L12E',
@@ -605,7 +627,9 @@ my %dark_overrides = (
     code_mark       => 'L10',
     code_tick       => 'L15/L05',
     code_info       => 'L10',
-    code_block      => '/L05;E',
+    code_block      => '/L03;E',
+    code_config     => '/#1C1B24;E',
+    code_data       => '/#181E1A;E',
     code_inline     => 'L25/L05',
     meta_mark       => 'L10/L15E',
     meta_block      => 'L00/L13E',
@@ -916,19 +940,24 @@ my %colorize = (
             my @code;
             while (/$block/g) {
                 my($info, $body) = ($4, $5);
-                push @code, [ $info =~ /^\h*([\w+#.-]+)/ ? $1 : '', $body ];
+                push @code, [ $info, $body ];
             }
             @highlight = highlight_code(@code);
         }
         s{$block}{
             my($oi, $fence, $lang, $body, $ci, $close, $trail) = ($1, $2, $4, $5, $6, $7, $8);
+            my @label = $config->{highlight} ? code_labels($lang, $body) : ();
             $body = shift(@highlight) // $body;
             my $result = md_color('code_mark', "$oi$fence");
             $result .= md_color('code_info', $lang) if length($lang);
             $result .= "\n";
             if (length($body)) {
-                $result .= join '', map { md_color('code_block', $_) }
-                    split /(?<=\n)/, $body;
+                $result .= join '', map {
+                    my $label = shift @label;
+                    !defined $label ? md_color('code_block', $_)
+                        : $label eq '' ? $_
+                        : fallback_color("code_$label", 'code_block', $_);
+                } split /(?<=\n)/, $body;
             }
             $result .= md_color('code_mark', "$ci$close") . $trail;
             protect($result)
@@ -1446,6 +1475,21 @@ sub parse_separator {
 # All the blocks are given at once, and each is colored by itself.
 # What comes back is the code which was given, with colors, so the
 # lines are those of the file.
+# The labels of the lines of a code block, when it has parts: a block
+# of pandoc-embedz has config, template and data.  A line of a part
+# labelled NAME is in the color code_NAME, when it is defined.
+sub code_labels {
+    my($info, $body) = @_;
+    my @part = eval {
+        require Text::ANSI::Highlight;
+        Text::ANSI::Highlight->parts($info, $body);
+    } or return ();
+    # in a block with labelled parts, the lines of the others, which
+    # are between them, have no color
+    (grep { defined $_->[2] } @part) or return ();
+    map { my @line = split /(?<=\n)/, $_->[1]; ($_->[2] // '') x @line } @part;
+}
+
 sub highlight_code {
     my @code = @_;
     my @none = (undef) x @code;

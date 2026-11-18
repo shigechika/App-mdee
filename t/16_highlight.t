@@ -47,7 +47,7 @@ sub md_file {
 
 # The colors of the md module are replaced by marks, to see which label
 # each line gets; the colors of the highlighter are left, as ^[
-my $marks = join ' ',
+our $marks = join ' ',
     q(--cm 'code_mark=sub{"<M:$_>"}'),
     q(--cm 'code_info=sub{"<I:$_>"}'),
     q(--cm 'code_block=sub{"<B:$_>"}');
@@ -110,6 +110,34 @@ is(show($md, 'highlight=nosuchhighlighter'), "<M:```><I:c>\n<B:int x;\n><B:\n><B
     like $line, qr/\A\e\[48;[\d;]+m/, 'real colors: the background at the top of the line';
     (my $plain = $out) =~ s/\e\[[\d;]*[mK]//g;
     is $plain, "```c\nint x;\n```\n", 'real colors: the text is the same';
+}
+
+# A block which has parts: a block of pandoc-embedz has a configuration,
+# a template and data.  The lines of a part are in the color of its
+# label, code_config and code_data, and those of the template in
+# code_block, as code_template is not defined.  The lines of ---
+# between them have no color.
+SKIP: {
+    skip 'Text::ANSI::Highlight has no parts', 4
+        unless Text::ANSI::Highlight->can('parts')
+            and eval { require Text::ANSI::Highlight::Block::embedz; 1 };
+    local $marks = join ' ', $marks,
+        q(--cm 'code_config=sub{"<C:$_>"}'),
+        q(--cm 'code_data=sub{"<D:$_>"}');
+    my $embedz = "```embedz\n---\ndata: a.csv\nn: 1\n---\n{{ n }}\n---\nx,y\n```\n";
+
+    is(show($embedz),
+       "<M:```><I:embedz>\n---\n<C:data: a.csv\n><C:n: 1\n>---\n<B:{{ n }}\n>---\n<D:x,y\n><M:```>\n",
+       'the parts of a block of embedz');
+    is(show("```{.embedz define=t}\n{{ n }}\n```\n"),
+       "<M:```><I:{.embedz define=t}>\n<B:{{ n }}\n><M:```>\n",
+       'a template alone is as a code block');
+    is(show("```{.embedz as=t}\nx,y\n```\n\n```c\nint x;\n```\n"),
+       "<M:```><I:{.embedz as=t}>\n<D:x,y\n><M:```>\n\n<M:```><I:c>\n<B:^[[31mint x;^[[0m\n><M:```>\n",
+       'the data alone, and a block of a language after it');
+    is(show($embedz, 'highlight=0'),
+       "<M:```><I:embedz>\n<B:---\n><B:data: a.csv\n><B:n: 1\n><B:---\n><B:{{ n }}\n><B:---\n><B:x,y\n><M:```>\n",
+       'highlight=0: a code block as it was');
 }
 
 done_testing;
