@@ -128,6 +128,13 @@ Others are always processed for structural integrity.
 Tables and list item folding are controlled by `--table` and
 `--fold` options, not by `--show`.
 
+The code in a fenced code block is shown in the colors of its
+language (```` ```perl ````), when [Text::ANSI::Highlight](https://metacpan.org/pod/Text%3A%3AANSI%3A%3AHighlight) and the command
+of its highlighter, `pandoc` by default, are installed.
+`--config highlight=gnu` uses `source-highlight`, and
+`--config highlight=0` turns it off.  See
+["Syntax Highlight of Code" in App::Greple::md](https://metacpan.org/pod/App%3A%3AGreple%3A%3Amd#Syntax-Highlight-of-Code).
+
 ## Multi-column Layout and Pagination
 
 By default, **mdee** calculates the number of display columns by
@@ -1007,6 +1014,11 @@ This command requires the following:
 - [App::ansiecho](https://metacpan.org/pod/App%3A%3Aansiecho) - ANSI color output
 - [Getopt::Long::Bash](https://metacpan.org/pod/Getopt%3A%3ALong%3A%3ABash) - bash option parsing
 - [Getopt::EX::termcolor](https://metacpan.org/pod/Getopt%3A%3AEX%3A%3Atermcolor) - terminal background detection
+
+The code in fenced code blocks is colored by
+[Text::ANSI::Highlight](https://metacpan.org/pod/Text%3A%3AANSI%3A%3AHighlight), with `pandoc` 3.4 or later
+(`brew install pandoc`), or with `source-highlight` or
+`skylighting`.  Without the command, the code is shown as it is.
 
 `--refill` finds the paragraphs with [Markdown::Perl](https://metacpan.org/pod/Markdown%3A%3APerl) (pure Perl,
 installed with this distribution).  The [CommonMark](https://metacpan.org/pod/CommonMark) module, which
