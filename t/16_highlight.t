@@ -73,9 +73,15 @@ is(show("```nosuchlanguage\nfoo\n```\n"), "<M:```><I:nosuchlanguage>\n<B:foo\n><
    'a language which is not known: as it is');
 is(show("```c\n```\n"), "<M:```><I:c>\n<M:```>\n", 'an empty block');
 
-is(show("```c title=\"a.c\"\nint x;\n```\n"),
-   "<M:```><I:c title=\"a.c\">\n<B:^[[31mint x;^[[0m\n><M:```>\n",
-   'the language is the first word after the fence');
+# the line of the fence is given to Text::ANSI::Highlight as it is,
+# and it takes the first word from 0.04
+SKIP: {
+    skip 'Text::ANSI::Highlight does not take the line of a fence', 1
+        unless Text::ANSI::Highlight->can('parts');
+    is(show("```c title=\"a.c\"\nint x;\n```\n"),
+       "<M:```><I:c title=\"a.c\">\n<B:^[[31mint x;^[[0m\n><M:```>\n",
+       'the language is the first word after the fence');
+}
 
 is(show("~~~perl\nmy \$x;\n~~~\n\ntext\n\n```c\nint x;\n```\n\n```\nplain\n```\n"),
    "<M:~~~><I:perl>\n<B:^[[31mmy \$x;^[[0m\n><M:~~~>\n\ntext\n\n"
