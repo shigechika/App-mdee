@@ -27,8 +27,17 @@ jobs:
         uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.perl }}
-      - name: Install pandoc and libcmark (for --refill)
-        run: sudo apt-get update && sudo apt-get install -y pandoc libcmark-dev
+      - name: Install pandoc
+        # from the release of pandoc: the mirror of apt is sometimes
+        # very slow for a package of this size
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download -R jgm/pandoc -p '*-amd64.deb' -D "$RUNNER_TEMP/pandoc"
+          sudo dpkg -i "$RUNNER_TEMP"/pandoc/*.deb
+          pandoc --version | head -1
+      - name: Install libcmark (for --refill)
+        run: sudo apt-get update && sudo apt-get install -y libcmark-dev
       - name: Install dependencies
         run: cpanm -nq --metacpan --installdeps --with-develop --with-recommends .
       - name: Run test
