@@ -337,6 +337,13 @@ and C<highlight=sourcehighlight> (C<gnu>) or C<highlight=skylighting>
 (C<sky>) is the one of the name.  All the blocks of a file are given
 to the highlighter at once, and each is colored by itself.
 
+C<highlight=1> is C<pandoc> in its own style in the light mode, and in
+the style C<breezedark> in the dark mode.  A style of the highlighter
+can be named after a colon (C<highlight=pandoc:haddock>), and a
+highlighter which is named is as it is named in both modes.  The
+background colors of a style are not used: the background is that of
+the code block.
+
 The language is also the first class in braces, as pandoc takes it
 (C<```{.perl .numberLines}>).
 
@@ -1490,14 +1497,23 @@ sub code_labels {
     map { my @line = split /(?<=\n)/, $_->[1]; ($_->[2] // '') x @line } @part;
 }
 
+# the highlighter in the dark mode, when none is named
+our $DARK_HIGHLIGHT = 'pandoc:breezedark';
+
 sub highlight_code {
     my @code = @_;
     my @none = (undef) x @code;
     @code or return @none;
     my $name = $config->{highlight};
+    # the default is pandoc, in a style for a dark screen in the dark
+    # mode
+    my @with = $name ne '1' ? $name
+        : ($config->{mode} // '') eq 'dark' ? $DARK_HIGHLIGHT : ();
     my $hl = eval {
         require Text::ANSI::Highlight;
-        Text::ANSI::Highlight->new($name eq '1' ? () : $name);
+        # the background is that of the code block: a style for a
+        # dark screen has its own
+        Text::ANSI::Highlight->new(@with, background => 0);
     } or return @none;
     my @color = eval { $hl->highlight(@code) };
     @color == @code ? @color : @none;

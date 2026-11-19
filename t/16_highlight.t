@@ -9,6 +9,10 @@ use File::Path qw(make_path);
 BEGIN {
     eval { require Text::ANSI::Highlight; 1 }
         or plan skip_all => 'Text::ANSI::Highlight is not installed';
+    # the line of a fence for the language, the parts of a block and
+    # background => 0 are from 0.04
+    Text::ANSI::Highlight->can('parts')
+        or plan skip_all => 'Text::ANSI::Highlight 0.04 is required';
 }
 
 use lib '.';
@@ -18,7 +22,8 @@ use t::Util;
 # language, by a highlighter of Text::ANSI::Highlight.  Here the
 # highlighters are modules made for the test, found before the real
 # ones: they know the languages c and perl, and put a color on each
-# line, 31 by pandoc and 32 by sourcehighlight.
+# line, 31 by pandoc and 32 by sourcehighlight.  With a style, the
+# color is 35 on the background 40, as a style for a dark screen.
 my $dir = tempdir(CLEANUP => 1);
 {
     my $path = "$dir/lib/Text/ANSI/Highlight";
@@ -30,7 +35,11 @@ my $dir = tempdir(CLEANUP => 1);
 package Text::ANSI::Highlight::$name;
 sub language { \$_[0] =~ /^(?:c|perl)\$/ ? \$_[0] : undef }
 sub markdown { 0 }
-sub highlight { map { \$_->[1] =~ s/^(.+)\$/\\e[${color}m\$1\\e[0m/mgr } \@_ }
+our \$STYLE;
+sub highlight {
+    my \$c = defined \$STYLE ? '35;40' : $color;
+    map { \$_->[1] =~ s/^(.+)\$/\\e[\${c}m\$1\\e[0m/mgr } \@_;
+}
 1;
 END
         close $fh;
@@ -73,15 +82,9 @@ is(show("```nosuchlanguage\nfoo\n```\n"), "<M:```><I:nosuchlanguage>\n<B:foo\n><
    'a language which is not known: as it is');
 is(show("```c\n```\n"), "<M:```><I:c>\n<M:```>\n", 'an empty block');
 
-# the line of the fence is given to Text::ANSI::Highlight as it is,
-# and it takes the first word from 0.04
-SKIP: {
-    skip 'Text::ANSI::Highlight does not take the line of a fence', 1
-        unless Text::ANSI::Highlight->can('parts');
-    is(show("```c title=\"a.c\"\nint x;\n```\n"),
-       "<M:```><I:c title=\"a.c\">\n<B:^[[31mint x;^[[0m\n><M:```>\n",
-       'the language is the first word after the fence');
-}
+is(show("```c title=\"a.c\"\nint x;\n```\n"),
+   "<M:```><I:c title=\"a.c\">\n<B:^[[31mint x;^[[0m\n><M:```>\n",
+   'the language is the first word after the fence');
 
 is(show("~~~perl\nmy \$x;\n~~~\n\ntext\n\n```c\nint x;\n```\n\n```\nplain\n```\n"),
    "<M:~~~><I:perl>\n<B:^[[31mmy \$x;^[[0m\n><M:~~~>\n\ntext\n\n"
@@ -118,15 +121,30 @@ is(show($md, 'highlight=nosuchhighlighter'), "<M:```><I:c>\n<B:int x;\n><B:\n><B
     is $plain, "```c\nint x;\n```\n", 'real colors: the text is the same';
 }
 
+# In the dark mode the default highlighter has a style for a dark
+# screen.  The background of the style is taken out: it is that of the
+# code block.
+is(show($md, 'mode=dark'),
+   "<M:```><I:c>\n<B:^[[35mint x;^[[0m\n><B:\n><B:^[[35mint y;^[[0m\n><M:```>\n",
+   'dark: a style for a dark screen, without its background');
+is(show($md, 'mode=light'),
+   "<M:```><I:c>\n<B:^[[31mint x;^[[0m\n><B:\n><B:^[[31mint y;^[[0m\n><M:```>\n",
+   'light: the default style');
+is(show($md, 'mode=dark,highlight=pandoc'),
+   "<M:```><I:c>\n<B:^[[31mint x;^[[0m\n><B:\n><B:^[[31mint y;^[[0m\n><M:```>\n",
+   'dark: a highlighter which is named is as it is named');
+is(show($md, 'mode=dark,highlight=gnu:x'),
+   "<M:```><I:c>\n<B:^[[35mint x;^[[0m\n><B:\n><B:^[[35mint y;^[[0m\n><M:```>\n",
+   'a style which is named, without its background');
+
 # A block which has parts: a block of pandoc-embedz has a configuration,
 # a template and data.  The lines of a part are in the color of its
 # label, code_config and code_data, and those of the template in
 # code_block, as code_template is not defined.  The lines of ---
 # between them have no color.
 SKIP: {
-    skip 'Text::ANSI::Highlight has no parts', 4
-        unless Text::ANSI::Highlight->can('parts')
-            and eval { require Text::ANSI::Highlight::Block::embedz; 1 };
+    skip 'Text::ANSI::Highlight::Block::embedz is not installed', 4
+        unless eval { require Text::ANSI::Highlight::Block::embedz; 1 };
     local $marks = join ' ', $marks,
         q(--cm 'code_config=sub{"<C:$_>"}'),
         q(--cm 'code_data=sub{"<D:$_>"}');
