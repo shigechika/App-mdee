@@ -1036,6 +1036,10 @@ Enable or disable table formatting.  When enabled, Markdown tables
 are formatted using L<ansicolumn(1)|App::ansicolumn> for aligned column display.
 Column alignment specified in the separator line (C<:---> for left,
 C<:---:> for center, C<---:> for right) is respected.
+A C<< <br> >> (or C<< <br/> >>, C<< <br /> >>) in a cell breaks the
+cell into lines after it; one in a code span, or escaped as
+C<< \<br> >>, does not.  The default theme C<nomark> hides the
+C<< <br> >>, and C<--no-theme> shows it.
 Default is enabled.
 
 When folding is enabled, a table wider than the fold width is fit into
@@ -1340,6 +1344,7 @@ Available labels:
     image             Images ![alt](url)
     image_link        Image links [![alt](img)](url)
     link_mark         Link/image brackets (overrides emphasis_mark)
+    br_mark           <br> breaking a table cell (overrides emphasis_mark)
     blockquote        Blockquote marker (>)
     horizontal_rule   Horizontal rules (---, ***, ___)
     comment           HTML comments (<!-- ... -->)
@@ -1532,7 +1537,8 @@ Append closing hashes to h3-h6 headers.
 =item C<nomark> (default)
 
 Hide emphasis markers (C<**>, C<*>, C<__>, C<_>, C<~~>),
-inline code backticks, and link brackets (C<[>, C<]>).
+inline code backticks, link brackets (C<[>, C<]>), and the
+C<< <br> >> that breaks a table cell into lines.
 Content text keeps its formatting (bold, italic,
 strikethrough, code, clickable links) but the surrounding
 markers are not displayed.  Table marks (C<markcell>,

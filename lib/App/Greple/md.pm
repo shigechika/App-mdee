@@ -134,7 +134,11 @@ Refill>).  Disabled by default.
 
 Enable or disable table formatting.  When enabled (default),
 Markdown tables (3 or more consecutive pipe-delimited rows) are
-formatted with aligned columns using L<App::ansicolumn>.
+formatted with aligned columns using L<App::ansicolumn>.  A C<< <br> >>
+(or C<< <br/> >>, C<< <br /> >>) in a cell breaks the cell into lines
+after it, and is colored with C<br_mark> (see L</Line Breaks in
+Tables>); one in a code span, or escaped as C<< \<br> >>, does not.  This needs an L<App::ansicolumn> which takes
+a LINE SEPARATOR (U+2028) as a line break in a cell.
 
     greple -Mmd --no-table -- file.md
 
@@ -477,6 +481,17 @@ The C<!> prefix for images uses the C<image> or C<image_link>
 color.  Hide brackets with C<--cm 'link_mark=sub{""}'> (used by
 the C<nomark> theme).
 
+=head2 Line Breaks in Tables
+
+    LABEL        LIGHT / DARK
+    br_mark      -       -
+
+C<br_mark> colors a C<< <br> >> which breaks a table cell into lines
+(see B<--[no-]table>).  Undefined by default, falls back to
+C<emphasis_mark>.  Hide it with C<--cm 'br_mark=sub{""}'> (used by
+the C<nomark> theme): the line break is left, and the tag is not
+shown.
+
 =head1 SEE ALSO
 
 =over 4
@@ -555,7 +570,7 @@ my @color_labels = qw(
     comment link image image_link
     h1 h2 h3 h4 h5 h6
     bold italic strike emphasis_mark
-    bold_mark italic_mark strike_mark link_mark
+    bold_mark italic_mark strike_mark link_mark br_mark
     blockquote horizontal_rule
 );
 
@@ -1379,8 +1394,23 @@ sub begin {
     }
     $front_lines = do { my $f = front_matter($_); defined $f ? ($f =~ tr/\n//) + 1 : 0 };
     refill()       if $config->{refill};
+    mark_line_breaks() if $config->{table};
     colorize()     if $config->{colorize};
     format_table() if $config->{table};
+}
+
+# A <br> in a table row breaks the cell: a LINE SEPARATOR (U+2028)
+# is put after it, which ansicolumn takes as a line break in a cell.
+# The <br> stays, as the text is shown as written.  It is done before
+# colorize(), while a code span still has its backticks: a <br> in a
+# code span, and an escaped one (\<br>), break nothing, nor does one at
+# the end of a cell, which would leave an empty line.  The lines are
+# those format_table() takes as a table; a separator left in lines it
+# does not format after all (in a code block, say) is taken out there.
+sub mark_line_breaks {
+    s{(^ {0,3}\|.+\|\h*\n){3,}}{
+        $& =~ s{$CODE(*SKIP)(*FAIL)|(?<!\\)<br\h*/?>\K(?!\h*\|)}{\x{2028}}gir
+    }mge;
 }
 
 sub format_table {
@@ -1397,6 +1427,10 @@ sub format_table {
     # the same column for ansicolumn.
     s{(^ {0,3}\|.+\|\h*\n){3,}}{
         my $block = $& =~ s/\h+$//mgr;
+        # a <br> which breaks a cell (see mark_line_breaks) has the
+        # color of br_mark, which the nomark theme makes empty
+        $block =~ s{<br\h*/?>(?=\x{2028})}{mark_color('br', $&)}gie
+            if $config->{colorize};
         my $line  = 1 + (substr($_, 0, $-[0]) =~ tr/\n//);
         my $lines = $& =~ tr/\n//;
         my($right, $center) = parse_separator(\$block);
@@ -1454,6 +1488,8 @@ sub format_table {
         push @table_shift, [ $line, ($table =~ tr/\n//) - $lines ];
         $table;
     }mge;
+    # the separators of mark_line_breaks() left out of the tables
+    s{<br\h*/?>\K\x{2028}}{}gi;
 }
 
 sub parse_separator {

@@ -96,6 +96,15 @@ before further processing.
 When `--rule` is enabled (default), ASCII pipe characters are replaced
 with Unicode box-drawing characters (`│`, `├`, `┤`, `┼`, `─`).
 
+A `<br>` in a cell breaks the cell into lines.  Before coloring, while
+code spans still have their backticks, `mark_line_breaks()` puts a
+LINE SEPARATOR (U+2028) after every `<br>` in the table rows, except
+in a code span, after a backslash, and at the end of a cell.
+ansicolumn takes it as a line break in a cell.  The `<br>` is colored with
+`br_mark`, which the `nomark` theme makes empty to hide it.
+A separator left in rows that are not formatted as a table is taken
+out after the formatting.
+
 #### Text Folding
 
 Text folding is handled within the [App::Greple::md](https://metacpan.org/pod/App%3A%3AGreple%3A%3Amd) module

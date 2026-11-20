@@ -42,6 +42,7 @@ em·dee (mdee: Markdown, Easy on the Eyes) is a Markdown *text* viewer command i
 - `t/11_quote_fold.t` - long block quote lines are folded with the quote marker repeated on the continuation lines, with and without color
 - `t/14_escape.t` - control characters and escape sequences of the file are removed, colors stay
 - `t/15_front_matter.t` - front matter is shown as a code block (marks in place of colors), only at the top, not folded; `front_matter=0`
+- `t/17_table_br.t` - a `<br>` in a table cell breaks the cell (skipped with an ansicolumn that does not take U+2028 as a line break in a cell)
 - `t/10_blocks.t` - `App::Greple::md::Blocks`: both parsers report the same paragraph lines (skipped without one)
 - `t/Util.pm` - Test helper for greple-based tests
 - `t/runner/` - Submodule (p5-script-runner) for finding greple path

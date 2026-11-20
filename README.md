@@ -342,6 +342,10 @@ Use [tecolicom/tap](https://github.com/tecolicom/homebrew-tap):
     are formatted using [ansicolumn(1)](https://metacpan.org/pod/App%3A%3Aansicolumn) for aligned column display.
     Column alignment specified in the separator line (`:---` for left,
     `:---:` for center, `---:` for right) is respected.
+    A `<br>` (or `<br/>`, `<br />`) in a cell breaks the
+    cell into lines after it; one in a code span, or escaped as
+    `\<br>`, does not.  The default theme `nomark` hides the
+    `<br>`, and `--no-theme` shows it.
     Default is enabled.
 
     When folding is enabled, a table wider than the fold width is fit into
@@ -627,6 +631,7 @@ bold text, etc.).
         image             Images ![alt](url)
         image_link        Image links [![alt](img)](url)
         link_mark         Link/image brackets (overrides emphasis_mark)
+        br_mark           <br> breaking a table cell (overrides emphasis_mark)
         blockquote        Blockquote marker (>)
         horizontal_rule   Horizontal rules (---, ***, ___)
         comment           HTML comments (<!-- ... -->)
@@ -807,7 +812,8 @@ is applied in order as a transformation of the default.
 - `nomark` (default)
 
     Hide emphasis markers (`**`, `*`, `__`, `_`, `~~`),
-    inline code backticks, and link brackets (`[`, `]`).
+    inline code backticks, link brackets (`[`, `]`), and the
+    `<br>` that breaks a table cell into lines.
     Content text keeps its formatting (bold, italic,
     strikethrough, code, clickable links) but the surrounding
     markers are not displayed.  Table marks (`markcell`,
