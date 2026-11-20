@@ -251,7 +251,9 @@ In ansicolumn, with the option, a line with US holds lines kept intact:
 - Its rows are measured one by one when the width of the panes is
   decided, and counted one by one when the panes are filled.
 - A row that fits the pane width, run-in room included, is padded and
-  not folded; a row that does not fit is folded as before.
+  not folded; a row that does not fit is cut at the pane width, as a
+  terminal does, with no word boundary and no line-break (kinsoku)
+  rule: they are for text folded into lines, and a row is not text.
 - Later: a block that does not fit the rest of a pane starts the next
   pane; a block taller than a pane is divided between rows, and the
   header row can be repeated.
