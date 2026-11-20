@@ -278,6 +278,10 @@ Available parameters:
     table_boundary  fold boundary in wrapped cells (default: word)
     table_linebreak line break mode in wrapped cells: none, runin,
                     runout or all (default: all)
+    intact          parts sent to ansicolumn --intact to be kept as
+                    they are, colon separated; only "table" for now:
+                    the lines of a formatted table are joined into
+                    one (default: none)
     table_style     lattice: column separators (default; pipe is
                     another name); 3line: columns separated by spaces,
                     a rule above and below the table and per column
@@ -596,6 +600,7 @@ my $config = Getopt::EX::Config->new(
     table_runout    => 2,        # run-out width in wrapped cells
     table_boundary  => 'word',   # fold boundary in wrapped cells
     table_linebreak => 'all',    # line break (kinsoku) mode in wrapped cells
+    intact          => '',       # parts kept intact by ansicolumn --intact (table)
     rule            => 1,        # box-drawing characters for tables
     table_style     => 'lattice', # lattice (or pipe): column separators; 3line, simple: spaces and rules only
     nofork          => 1,        # use nofork+raw for code ref calls
@@ -695,7 +700,7 @@ sub finalize {
                        "colorize!", "nofork!", "fold!", "refill!", "refill_parser=s", "front_matter!", "fold_width=i", "fold_runin=i", "fold_runout=i",
                        "table!", "table_trim!",
                        "table_width=i", "table_cell=s", "table_wrap_mark=s", "table_cell_mark=s", "rule!", "table_style=s",
-                       "table_runin=i", "table_runout=i", "table_boundary=s", "table_linebreak=s",
+                       "table_runin=i", "table_runout=i", "table_boundary=s", "table_linebreak=s", "intact=s",
                        "heading_markup|hm:s", "cjk_friendly!", "tick_open=s", "tick_close=s",
                        "hashed=s%",
                        "colormap|cm=s" => \@opt_cm,
@@ -1136,6 +1141,16 @@ sub colorize {
 # Table formatting
 #
 
+# What joins the lines of a part kept intact (config intact) into one
+# line, as ansicolumn --intact takes it
+my $INTACT_SEP = "\x1F";
+
+# Whether the part ("table") is kept intact
+sub intact {
+    my $part = shift;
+    grep { $_ eq $part } split /:/, $config->{intact} // '';
+}
+
 # Regions of formatted tables, used by --fold-by as --exclude so that
 # ansifold does not fold them again: three or more lines that contain a
 # column separator, in a block that has a separator row.  A line may
@@ -1156,6 +1171,9 @@ sub table_regions {
           [^\n]* [ $bar $cross ] [^\n]* \n         # ... with a separator somewhere
     }xxm;
     my $sep = qr{ (?= [^\n]* [ $cross | ] ) [ $rule $cross | - ]+ \n }xx;
+    # a table kept intact is a line with UNIT SEPARATORs, which come
+    # from nowhere else: remove_controls() takes them out of the text
+    return match_regions(pattern => qr/^[^\n]*$INTACT_SEP[^\n]*\n/m) if intact('table');
     match_regions(pattern => qr/ (?= (?:$row)*? $sep ) (?:$row){3,} /x);
 }
 
@@ -1485,6 +1503,11 @@ sub format_table {
             }
             $table =~ s{^[\x{2500} ]+$}{ $& =~ tr/\x{2500}/-/r }mge unless $config->{rule};
         }
+        # A table is kept intact: its lines joined into one by UNIT
+        # SEPARATOR, the last newline kept, for ansicolumn --intact,
+        # which lays them out without folding them.  Nothing after this
+        # takes a table by its lines but table_regions().
+        $table =~ s/\n(?=.)/$INTACT_SEP/gs if intact('table');
         push @table_shift, [ $line, ($table =~ tr/\n//) - $lines ];
         $table;
     }mge;

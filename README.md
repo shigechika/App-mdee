@@ -348,11 +348,17 @@ Use [tecolicom/tap](https://github.com/tecolicom/homebrew-tap):
     `<br>`, and `--no-theme` shows it.
     Default is enabled.
 
-    When folding is enabled, a table wider than the fold width is fit into
-    that width: columns that fit keep their width, and the cells of
-    over-wide columns are wrapped.  A table that already fits is not
-    changed.  Use `--config table_width=0` to disable wrapping, or
-    `--config table_width=N` to use a different width.  Per-column
+    When folding is enabled, a table wider than the table width is fit
+    into that width.  The table width is the fold width; with nup, when
+    the fold width is not given, it is the fold width plus the run-in
+    width but one (81 for a pane of 85), because the lines of a table are
+    sent to nup to be kept intact, not folded (see `--intact` of
+    [ansicolumn(1)](https://metacpan.org/pod/App%3A%3Aansicolumn)); `--cat-v` does not do it, and
+    the table width is the fold width there.  Columns that fit keep
+    their width, and the cells of over-wide columns are wrapped.  A
+    table that already fits is not changed.  Use `--config
+    table_width=0` to disable wrapping, or `--config table_width=N` to
+    use a different width.  Per-column
     widths can be given with `--config table_cell=SPEC`, where SPEC
     is a colon-separated list passed to ansicolumn's `--cell` option
     (for example `0:10` fixes the second column at 10 columns, and
@@ -446,8 +452,9 @@ Use [tecolicom/tap](https://github.com/tecolicom/homebrew-tap):
     pane width (output width divided by the number of columns) minus
     3 for borders and padding and the run-in width (see `--runin`),
     which gives 78 when pane-width is 85.
-    Only effective when `--fold` is enabled.  The same width is used
-    to fit tables (see `--table`).
+    Only effective when `--fold` is enabled.  Tables are fit into the
+    same width when it is given; otherwise, with nup, into this width
+    plus the run-in width but one (see `--table`).
 
 - **--runin**=_N_, **--runout**=_N_, **--runlen**=_N_
 
