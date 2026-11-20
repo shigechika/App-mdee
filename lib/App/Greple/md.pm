@@ -66,7 +66,7 @@ The following options are defined as greple command options
 Enable text folding for list items, definition lists, block quotes
 and the paragraphs joined by C<--refill>.  Long lines are wrapped
 with proper indentation using L<ansifold(1)|App::ansifold> via
-L<Greple::tee>; the continuation lines of a block quote start with
+L<App::Greple::tee>; the continuation lines of a block quote start with
 the quote marker again.
 Code blocks, front matter, HTML comments, and tables are
 excluded from folding.  The fold width is controlled by the

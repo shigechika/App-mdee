@@ -77,28 +77,13 @@ definition, and joins those lines in the original text.  A line that
 starts a footnote definition (`[^name]:`) stays on its own line.  The
 joined lines are folded like list items.
 
-#### Text Folding
-
-Text folding is handled within the [App::Greple::md](https://metacpan.org/pod/App%3A%3AGreple%3A%3Amd) module
-using [Greple::tee](https://metacpan.org/pod/Greple%3A%3Atee) to pipe matched regions through
-[ansifold(1)](https://metacpan.org/pod/App%3A%3Aansifold).  It preserves ANSI escape sequences
-and maintains proper indentation for nested lists.  List items,
-definition lists and the paragraphs joined by `--refill` are
-folded; code blocks, front matter, HTML comments, and tables are
-excluded.
-
-Recognized list markers include `*`, `+`, `-`, `1.`, `1)`, `#.`,
-and `#)`.  The `#` marker is the auto-numbered list of Pandoc's Markdown.
-
-The folding width is controlled by `--fold-width` option (default: the
-pane width minus 3 and the run-in width, 78 for a pane of 85).
-
 #### Table Formatting
 
 Table formatting is handled within the [App::Greple::md](https://metacpan.org/pod/App%3A%3AGreple%3A%3Amd) module
-(after syntax highlighting, before output).  Markdown tables are
-detected by the pattern `^ {0,3}(\|.+\|\n){3,}` and formatted with
-aligned columns using [ansicolumn(1)](https://metacpan.org/pod/App%3A%3Aansicolumn) while
+(after syntax highlighting, before text folding).  Markdown tables
+are detected by the pattern `(^ {0,3}\|.+\|\h*\n){3,}` (spaces after
+the last pipe are allowed and removed) and formatted with aligned
+columns using [ansicolumn(1)](https://metacpan.org/pod/App%3A%3Aansicolumn) while
 preserving ANSI colors.
 
 Column alignment is parsed from the separator line: `:---` (left,
@@ -110,6 +95,28 @@ before further processing.
 
 When `--rule` is enabled (default), ASCII pipe characters are replaced
 with Unicode box-drawing characters (`│`, `├`, `┤`, `┼`, `─`).
+
+#### Text Folding
+
+Text folding is handled within the [App::Greple::md](https://metacpan.org/pod/App%3A%3AGreple%3A%3Amd) module
+using [App::Greple::tee](https://metacpan.org/pod/App%3A%3AGreple%3A%3Atee) to pipe matched regions through
+[ansifold(1)](https://metacpan.org/pod/App%3A%3Aansifold).  It preserves ANSI escape sequences
+and maintains proper indentation for nested lists.  List items,
+definition lists, block quotes and the paragraphs joined by
+`--refill` are folded; the continuation lines of a block quote start
+with the quote marker again.  Code blocks, front matter, HTML
+comments, and tables are excluded.
+
+Folding comes last.  The md module refills the paragraphs, colors the
+text and formats the tables in its `--begin` function, before greple
+matches anything; greple then finds the regions to fold in that
+result, and the tables already formatted are excluded from them.
+
+Recognized list markers include `*`, `+`, `-`, `1.`, `1)`, `#.`,
+and `#)`.  The `#` marker is the auto-numbered list of Pandoc's Markdown.
+
+The folding width is controlled by `--fold-width` option (default: the
+pane width minus 3 and the run-in width, 78 for a pane of 85).
 
 ### Output Stage
 
