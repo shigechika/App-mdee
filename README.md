@@ -355,8 +355,11 @@ Use [tecolicom/tap](https://github.com/tecolicom/homebrew-tap):
     sent to nup to be kept intact, not folded (see `--intact` of
     [ansicolumn(1)](https://metacpan.org/pod/App%3A%3Aansicolumn)); `--cat-v` does not do it, and
     the table width is the fold width there.  Columns that fit keep
-    their width, and the cells of over-wide columns are wrapped.  A
-    table that already fits is not changed.  Use `--config
+    their width, and the cells of over-wide columns are wrapped.  The
+    space at the right end of the table is left out when the table does
+    not fit the width with it, so that the text of the last column can
+    go up to the end.  A table that already fits is not changed.  The
+    `3line` and `simple` styles have no such space.  Use `--config
     table_width=0` to disable wrapping, or `--config table_width=N` to
     use a different width.  Per-column
     widths can be given with `--config table_cell=SPEC`, where SPEC
@@ -410,21 +413,27 @@ Use [tecolicom/tap](https://github.com/tecolicom/homebrew-tap):
     rule the width of the table above and below it, and a rule per column
     below the header.
 
-        ─────────────────────────────────
-         Left   Center   Right   Default
-        ────── ──────── ─────── ─────────
-         a        b          c   d
-        ─────────────────────────────────
+        ─────────────────────────────
+         Left  Center  Right  Default
+        ───── ─────── ────── ────────
+         a       b         c  d
+        ─────────────────────────────
 
     `simple` also separates the columns by spaces only, and draws the
     rule per column below the header and below the table.
 
-         Left   Center   Right   Default
-        ────── ──────── ─────── ─────────
-         a        b          c   d
-        ────── ──────── ─────── ─────────
+         Left  Center  Right  Default
+        ───── ─────── ────── ────────
+         a       b         c  d
+        ───── ─────── ────── ────────
 
     The rules are drawn with `-` with `--no-rule`.
+
+    In these two styles a cell has no space at its right, and a space at
+    its left, where the marks of `--table-wrap-mark` and
+    `--table-cell-mark` are put.  `--config table_gap=N` sets the number
+    of spaces between the text of a cell and that place of the next column
+    (default 1).
 
 - **--cat-v**
 

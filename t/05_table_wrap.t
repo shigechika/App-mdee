@@ -106,10 +106,11 @@ isnt($boundary, $wrapped, 'table_boundary and table_linebreak change the wrappin
     print $fh "| 名前 | 説明 |\n|------|------|\n",
         "| 乙 | 句読点のある文章は、行の終わりに、追い込まれることがあります。それを見ます。 |\n";
     close $fh;
-    for my $style (qw(lattice 3line simple)) {
+    for my $style (qw(lattice 3line:table_gap=2 simple:table_gap=2)) {
+        my $param = "table_style=" . $style =~ tr/:/,/r;
         my $out = sub {
             my $w = shift;
-            my $o = run("'-Mmd::config(colorize=0,table=1,rule=1,table_style=$style,table_width=$w)' $file")->stdout;
+            my $o = run("'-Mmd::config(colorize=0,table=1,rule=1,$param,table_width=$w)' $file")->stdout;
             map { $strip->($_) } split /\n/, $o;
         };
         my @l40 = $out->(40);
@@ -122,6 +123,26 @@ isnt($boundary, $wrapped, 'table_boundary and table_linebreak change the wrappin
         is_deeply($text[0], $text[1],
                   "$style: the lines are broken at the same places");
     }
+
+    # 3line and simple have no space at the right of a cell: table_gap
+    # is the number of spaces to the mark of the next column
+    my $gap = "$dir/gap.md";
+    open $fh, '>', $gap or die;
+    print $fh "| a | b | c |\n|---|---|---|\n| xx | yyy | z |\n| xx | the quick brown fox jumps | z |\n";
+    close $fh;
+    my $row = sub {
+        my $o = run("'-Mmd::config(colorize=0,table=1,rule=1,@_)' $gap")->stdout;
+        grep { /xx/ } map { $strip->($_) } split /\n/, $o;
+    };
+    for my $style (qw(3line simple)) {
+        is(($row->("table_style=$style"))[1], ' xx  the quick brown fox jumps  z',
+           "$style: no space at the right of a cell");
+        like(($row->("table_style=$style,table_cell_mark=+,table_width=20"))[0] // "", qr{^ xx \+\S},
+           "$style: one space before the mark of the next column");
+        is(($row->("table_style=$style,table_gap=2"))[1], ' xx   the quick brown fox jumps   z ',
+           "$style: table_gap=2");
+    }
+    is(($row->("table_gap=3"))[1], " xx $V the quick brown fox jumps $V z ", 'lattice: table_gap has no effect');
 }
 
 done_testing;
