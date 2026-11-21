@@ -1457,6 +1457,9 @@ sub format_table {
         # left as written: backslash escapes are not processed yet.
         if ($config->{table_trim}) {
             @sep_opt = ('-rs', '\s*(?<!\\\\)\|\s*', '--item-format= %s ', '--table-remove=1,-0', '--padding');
+            # the pad at the right end goes when the table does not
+            # fit the width with it
+            push @sep_opt, '--table-tight';
         } else {
             $_++ for @$right, @$center;
             @sep_opt = ('-rs', '(?<!\\\\)\|');

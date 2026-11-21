@@ -550,6 +550,7 @@ sub parse_separator {
    - `--item-format=' %s '` (trim only): Add padding to each cell
    - `--table-remove=1,-0` (trim only): Remove leading/trailing empty columns
    - `--padding` (trim only): Pad last column to full width
+   - `--table-tight` (trim only, App::ansicolumn >= 1.70): the pad at the right end, from `--item-format`, is not counted when the table is fit into `-w`, and is left out when the table does not fit the width with it. The text of the last column can then go up to the right end, where the margin of the page follows, and a line with a character run in (`。`) fits a width less by one. A table which fits with the pad keeps it, so narrow tables do not change. All styles; the left pad stays, because the marks use it
    - `-o $sep`: Output separator (`│` when rule is enabled, `|` otherwise)
    - `-t`: Table mode (auto-determine column widths)
    - `--cu=1`: Column unit (minimum column width)

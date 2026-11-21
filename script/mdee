@@ -1069,8 +1069,10 @@ width but one (81 for a pane of 85), because the lines of a table are
 sent to nup to be kept intact, not folded (see C<--intact> of
 L<ansicolumn(1)|App::ansicolumn>); C<--cat-v> does not do it, and
 the table width is the fold width there.  Columns that fit keep
-their width, and the cells of over-wide columns are wrapped.  A
-table that already fits is not changed.  Use C<--config
+their width, and the cells of over-wide columns are wrapped.  The
+space at the right end of the table is left out when the table does
+not fit the width with it, so that the text of the last column can
+go up to the end.  A table that already fits is not changed.  Use C<--config
 table_width=0> to disable wrapping, or C<--config table_width=N> to
 use a different width.  Per-column
 widths can be given with C<--config table_cell=SPEC>, where SPEC

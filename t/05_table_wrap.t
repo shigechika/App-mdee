@@ -97,4 +97,31 @@ isnt($boundary, $wrapped, 'table_boundary and table_linebreak change the wrappin
     is($rc, $wrapped, '~/.ansicolumnrc does not change the wrapping');
 }
 
+# the pad at the right end of a table goes when the table does not fit
+# the width with it (ansicolumn --table-tight), in every style
+{
+    my $dir = tempdir(CLEANUP => 1);
+    my $file = "$dir/tight.md";
+    open my $fh, '>', $file or die;
+    print $fh "| 名前 | 説明 |\n|------|------|\n",
+        "| 乙 | 句読点のある文章は、行の終わりに、追い込まれることがあります。それを見ます。 |\n";
+    close $fh;
+    for my $style (qw(lattice 3line simple)) {
+        my $out = sub {
+            my $w = shift;
+            my $o = run("'-Mmd::config(colorize=0,table=1,rule=1,table_style=$style,table_width=$w)' $file")->stdout;
+            map { $strip->($_) } split /\n/, $o;
+        };
+        my @l40 = $out->(40);
+        is_deeply([ map { ansi_width($_) } @l40 ], [ (40) x @l40 ], "$style: 40 wide in the width 40");
+        ok((grep { /あります。$/ } @l40), "$style: a character run in is at the right end");
+        my @l41 = $out->(41);
+        is_deeply([ map { ansi_width($_) } @l41 ], [ (41) x @l41 ], "$style: 41 wide in the width 41");
+        ok((grep { /あります。 $/ } @l41), "$style: the pad stays when the table fits with it");
+        my @text = map { [ map { s/\s+$//r } grep { /\p{Hiragana}/ } @$_ ] } \@l40, \@l41;
+        is_deeply($text[0], $text[1],
+                  "$style: the lines are broken at the same places");
+    }
+}
+
 done_testing;
