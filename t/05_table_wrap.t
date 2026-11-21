@@ -98,7 +98,7 @@ isnt($boundary, $wrapped, 'table_boundary and table_linebreak change the wrappin
 }
 
 # the pad at the right end of a table goes when the table does not fit
-# the width with it (ansicolumn --table-tight), in every style
+# the width with it (ansicolumn 1.70), in every style
 {
     my $dir = tempdir(CLEANUP => 1);
     my $file = "$dir/tight.md";

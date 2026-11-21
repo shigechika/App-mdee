@@ -1466,8 +1466,7 @@ sub format_table {
             my $pad = ' ' x ($open ? ($config->{table_gap} || 1) - 1 : 1);
             @sep_opt = ('-rs', '\s*(?<!\\\\)\|\s*', "--item-format= %s$pad", '--table-remove=1,-0', '--padding');
             # the pad at the right end goes when the table does not
-            # fit the width with it
-            push @sep_opt, '--table-tight';
+            # fit the width with it (ansicolumn 1.70)
         } else {
             $_++ for @$right, @$center;
             @sep_opt = ('-rs', '(?<!\\\\)\|');
