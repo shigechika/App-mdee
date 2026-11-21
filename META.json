@@ -47,7 +47,7 @@
          "requires" : {
             "App::Greple" : "10.04",
             "App::Greple::tee" : "1.04",
-            "App::ansicolumn" : "1.69",
+            "App::ansicolumn" : "1.70",
             "App::ansiecho" : "0",
             "App::ansifold" : "1.38",
             "App::cat::v" : "0",
@@ -86,7 +86,7 @@
          "web" : "https://github.com/tecolicom/App-mdee"
       }
    },
-   "version" : "1.23",
+   "version" : "1.24",
    "x_contributors" : [
       "Kazumasa Utashiro <kaz@utashiro.com>"
    ],
