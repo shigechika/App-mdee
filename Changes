@@ -2,6 +2,13 @@ Revision history for Perl extension App-mdee
 
 {{$NEXT}}
 
+1.25 2026-11-22T07:04:02Z
+
+    - A table cell has no space at its right in the lattice style
+      too, as in 3line and simple: the text is next to the column
+      separator, and the columns are one column closer.  The config
+      table_gap now works in every style (2 is the former lattice)
+
 1.24 2026-11-21T17:01:28Z
 
     - The space at the right end of a table is left out when the

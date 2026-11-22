@@ -4,7 +4,7 @@ package App::mdee;
 # POD documentation is appended from script/mdee at release time.
 # See minil.toml for details.
 
-our $VERSION = "1.24";
+our $VERSION = "1.25";
 
 1;
 =encoding utf-8
@@ -64,7 +64,7 @@ mdee - em·dee, Markdown Easy on the Eyes
 
 =head1 VERSION
 
-Version 1.24
+Version 1.25
 
 =cut
 =head1 DESCRIPTION
@@ -386,11 +386,9 @@ width but one (81 for a pane of 85), because the lines of a table are
 sent to nup to be kept intact, not folded (see C<--intact> of
 L<ansicolumn(1)|App::ansicolumn>); C<--cat-v> does not do it, and
 the table width is the fold width there.  Columns that fit keep
-their width, and the cells of over-wide columns are wrapped.  The
-space at the right end of the table is left out when the table does
-not fit the width with it, so that the text of the last column can
-go up to the end.  A table that already fits is not changed.  The
-C<3line> and C<simple> styles have no such space.  Use C<--config
+their width, and the cells of over-wide columns are wrapped.  A cell
+has no space at its right, so the text of the last column goes up to
+the end of the width (see C<table_gap> in C<--table-style>).  Use C<--config
 table_width=0> to disable wrapping, or C<--config table_width=N> to
 use a different width.  Per-column
 widths can be given with C<--config table_cell=SPEC>, where SPEC
@@ -436,9 +434,9 @@ Select how tables are drawn.  C<lattice> (default) keeps a separator
 between the columns, C<│> or C<|> depending on C<--rule>.  C<pipe> is
 another name of it, kept for compatibility:
 
-     Left │ Center │ Right │ Default
-    ──────┼────────┼───────┼─────────
-     a    │   b    │     c │ d
+     Left│ Center│ Right│ Default
+    ─────┼───────┼──────┼────────
+     a   │   b   │     c│ d
 
 C<3line> separates the columns by spaces only and draws three rules: a
 rule the width of the table above and below it, and a rule per column
@@ -460,11 +458,14 @@ rule per column below the header and below the table.
 
 The rules are drawn with C<-> with C<--no-rule>.
 
-In these two styles a cell has no space at its right, and a space at
-its left, where the marks of C<--table-wrap-mark> and
-C<--table-cell-mark> are put.  C<--config table_gap=N> sets the number
-of spaces between the text of a cell and that place of the next column
-(default 1).
+In every style a cell has a space at its left, where the marks of
+C<--table-wrap-mark> and C<--table-cell-mark> are put, and no space at
+its right.  C<--config table_gap=N> sets the number of columns between
+the text of a cell and that place of the next column (default 1): the
+last of them is the column separator, and the others are spaces at the
+right of the cell.  With C<table_gap=2> a cell of C<lattice> has a
+space on both sides; the spaces at the right end of the table are then
+left out when the table does not fit the width with them.
 
 =item B<--cat-v>
 
