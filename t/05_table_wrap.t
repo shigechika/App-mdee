@@ -97,7 +97,7 @@ isnt($boundary, $wrapped, 'table_boundary and table_linebreak change the wrappin
     is($rc, $wrapped, '~/.ansicolumnrc does not change the wrapping');
 }
 
-# the pad at the right end of a table goes when the table does not fit
+# with table_gap=2, the pad at the right end of a table goes when the table does not fit
 # the width with it (ansicolumn 1.70), in every style
 {
     my $dir = tempdir(CLEANUP => 1);
@@ -106,7 +106,7 @@ isnt($boundary, $wrapped, 'table_boundary and table_linebreak change the wrappin
     print $fh "| 名前 | 説明 |\n|------|------|\n",
         "| 乙 | 句読点のある文章は、行の終わりに、追い込まれることがあります。それを見ます。 |\n";
     close $fh;
-    for my $style (qw(lattice 3line:table_gap=2 simple:table_gap=2)) {
+    for my $style (qw(lattice:table_gap=2 3line:table_gap=2 simple:table_gap=2)) {
         my $param = "table_style=" . $style =~ tr/:/,/r;
         my $out = sub {
             my $w = shift;
@@ -142,7 +142,8 @@ isnt($boundary, $wrapped, 'table_boundary and table_linebreak change the wrappin
         is(($row->("table_style=$style,table_gap=2"))[1], ' xx   the quick brown fox jumps   z ',
            "$style: table_gap=2");
     }
-    is(($row->("table_gap=3"))[1], " xx $V the quick brown fox jumps $V z ", 'lattice: table_gap has no effect');
+    is(($row->(""))[1], " xx$V the quick brown fox jumps$V z", 'lattice: no space at the right of a cell');
+    is(($row->("table_gap=2"))[1], " xx $V the quick brown fox jumps $V z ", 'lattice: table_gap=2');
 }
 
 done_testing;

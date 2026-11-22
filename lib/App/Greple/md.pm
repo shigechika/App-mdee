@@ -288,8 +288,8 @@ Available parameters:
                     below the header; simple: columns separated by
                     spaces, a rule per column below the header and
                     below the table
-    table_gap       spaces between a cell and the mark place of the
-                    next column in the 3line and simple styles
+    table_gap       columns between a cell and the mark place of the
+                    next column, the column separator included
                     (default: 1)
     rule            box-drawing characters (default: 1)
     osc8            OSC 8 hyperlinks (default: 1)
@@ -606,7 +606,7 @@ my $config = Getopt::EX::Config->new(
     intact          => '',       # parts kept intact by ansicolumn --intact (table)
     rule            => 1,        # box-drawing characters for tables
     table_style     => 'lattice', # lattice (or pipe): column separators; 3line, simple: spaces and rules only
-    table_gap       => 1,        # spaces after a cell in the 3line and simple styles
+    table_gap       => 1,        # columns from a cell to the mark place of the next column
     nofork          => 1,        # use nofork+raw for code ref calls
     highlight       => 1,        # syntax highlight of fenced code: 1, the name of a highlighter, or 0
     heading_markup  => 0,        # inline formatting in headings
@@ -1460,13 +1460,14 @@ sub format_table {
         # An escaped pipe (\|) is not a column separator (GFM).  It is
         # left as written: backslash escapes are not processed yet.
         if ($config->{table_trim}) {
-            # A cell has a space on each side with the column separators.
-            # Without them (3line, simple) the separator is a space, so
-            # table_gap spaces after a cell: the last of them is that.
-            my $pad = ' ' x ($open ? ($config->{table_gap} || 1) - 1 : 1);
+            # A cell has a space at its left, where the marks are put,
+            # and table_gap columns to that place of the next column:
+            # the last of them is the column separator (a space in
+            # 3line and simple).  With table_gap of 2 or more, the
+            # spaces at the right end go when the table does not fit
+            # the width with them (ansicolumn 1.70).
+            my $pad = ' ' x (($config->{table_gap} || 1) - 1);
             @sep_opt = ('-rs', '\s*(?<!\\\\)\|\s*', "--item-format= %s$pad", '--table-remove=1,-0', '--padding');
-            # the pad at the right end goes when the table does not
-            # fit the width with it (ansicolumn 1.70)
         } else {
             $_++ for @$right, @$center;
             @sep_opt = ('-rs', '(?<!\\\\)\|');
