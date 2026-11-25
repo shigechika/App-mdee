@@ -827,8 +827,8 @@ bold text, etc.).
 **mdee** shows images in the terminal, below the line that refers to
 them.  The line itself is kept, so the output with `--no-image` is
 the same text without the images.  When the image is shown, the line
-is markup only: it is shown as it is written, dimmed in `code_mark`
-like a code fence.
+is markup only: it is shown as it is written, in `code_info`, the
+color of the info string of a code fence.
 
 ## Which Images
 

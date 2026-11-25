@@ -1075,10 +1075,10 @@ my %colorize = (
             ) : ();
             if (@rows) {
                 # the line of a shown image is markup only, the Markdown
-                # or the HTML tags: it is put as it is in code_mark, as a
-                # code fence is
+                # or the HTML tags: it is put as it is in code_info, as the
+                # info string of a code fence is
                 my($indent, $tags) = $line =~ /^(\h*)(.*?)\h*$/;
-                $line = $indent . protect(md_color('code_mark', $tags));
+                $line = $indent . protect(md_color('code_info', $tags));
                 my $keep = intact("image");
                 # kept in one pane, the line of the image goes with its rows
                 push @added, [ $at, $keep ? 0 : scalar @rows ];

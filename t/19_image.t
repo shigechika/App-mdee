@@ -137,17 +137,18 @@ my $doc = md('doc.md', "# Title\n\n![logo](a.png)\n\ntext with ![inline](a.png) 
 	 qr/$PH/, 'a PNG is shown with png alone');
 }
 
-# the HTML tags of a shown image are in code_mark, as a code fence
+# the HTML tags of a shown image are in code_info, as the info string
+# of a code fence
 {
     my $md = md('tag.md', join "\n",
 	'<p><img src="a.png"></p>', '', '<p><img src="missing.png"></p>', '',
-	'```', 'x', '```', '');
+	'```{.note}', 'x', '```', '');
     my @l = split /\n/, mdee_out("$base,$img", $md);
-    my($fence) = map { /^(\e\[[0-9;]*m)```/ } @l;
+    my($fence) = map { /^\e\[[0-9;]*m```\e\[m\e\[K(\e\[[0-9;]*m)\{\.note\}/ } @l;
     my($shown) = grep { /a\.png/ } @l;
     my($missing) = grep { /missing\.png/ } @l;
-    ok($fence, 'the fence has a color');
-    like($shown, qr/^\Q$fence\E<p><img/, 'shown: the tags in the color of the fence');
+    ok($fence, 'the info string has a color');
+    like($shown, qr/^\Q$fence\E<p><img/, 'shown: the tags in the color of the info string');
     like($missing, qr/^<p><img/, 'not shown: the tags as they are');
 }
 
@@ -155,13 +156,13 @@ my $doc = md('doc.md', "# Title\n\n![logo](a.png)\n\ntext with ![inline](a.png) 
 {
     my $md = md('mdtag.md', join "\n",
 	'![logo](a.png)', '', '[![badge](a.png)](https://example.com/)', '',
-	'![none](missing.png)', '', '```', 'x', '```', '');
+	'![none](missing.png)', '', '```{.note}', 'x', '```', '');
     my @l = split /\n/, mdee_out("$base,$img", $md);
-    my($fence) = map { /^(\e\[[0-9;]*m)```/ } @l;
+    my($fence) = map { /^\e\[[0-9;]*m```\e\[m\e\[K(\e\[[0-9;]*m)\{\.note\}/ } @l;
     my($logo)  = grep { /logo/ } @l;
     my($badge) = grep { /badge/ } @l;
     my($none)  = grep { /none/ } @l;
-    like($logo, qr/^\Q$fence\E!\[logo\]\(a\.png\)\e\[m/, 'shown: the Markdown image in the color of the fence');
+    like($logo, qr/^\Q$fence\E!\[logo\]\(a\.png\)\e\[m/, 'shown: the Markdown image in the color of the info string');
     like($badge, qr/^\Q$fence\E\[!\[badge\]\(a\.png\)\]\(https:\/\/example\.com\/\)/,
 	 'shown: an image in a link too');
     unlike($none, qr/^\Q$fence\E/, 'not shown: the Markdown image as before');
