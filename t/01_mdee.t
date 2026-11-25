@@ -731,7 +731,9 @@ subtest q(refill option) => sub {
     my $out = `COLUMNS=200 $mdee -n --refill $test_md 2>&1`;
     like($out, qr/^greple .*refill=1/m, q(--refill passes refill=1 to the md module));
     $out = `COLUMNS=200 $mdee -n -r $test_md 2>&1`;
-    like($out, qr/^greple .*refill=1/m, q(-r is --refill));
+    like($out, qr/^greple .*refill=1/m, q(-r turns refill on by default));
+    $out = `COLUMNS=200 $mdee -n -rr $test_md 2>&1`;
+    unlike($out, qr/refill=/, q(-r twice gives the default back));
     $out = `COLUMNS=200 $mdee -n $test_md 2>&1`;
     unlike($out, qr/refill=/, q(refill is off by default));
     $out = `$mdee --help 2>&1`;
@@ -768,11 +770,31 @@ subtest q(refill option) => sub {
     like($out, qr/^greple .*refill=1/m, q(default[refill]=1 turns refill on));
     $out = `XDG_CONFIG_HOME=$tmpdir COLUMNS=200 $mdee -n --no-refill $test_md 2>&1`;
     unlike($out, qr/refill=/, q(--no-refill overrides default[refill]));
+    $out = `XDG_CONFIG_HOME=$tmpdir COLUMNS=200 $mdee -n -r $test_md 2>&1`;
+    unlike($out, qr/refill=/, q(-r turns default[refill]=1 off));
+
+    # --refill, --no-refill and -r in any order: the last of --refill
+    # and --no-refill takes effect, and -r, the reverse of the default,
+    # only when neither is given
+    for my $default (0, 1) {
+	my %env = (XDG_CONFIG_HOME => $default ? $tmpdir : tempdir(CLEANUP => 1));
+	for my $seq ('--refill -r', '-r --refill', '--no-refill -r', '-r --no-refill',
+		     '--refill -r --refill', '--no-refill -r -r', '-r -r', '-r -r -r',
+		     '-r --refill -r --no-refill -r', '--refill --no-refill -r') {
+	    my($given) = reverse grep { /^--/ } split ' ', $seq;
+	    my $on = $given ? $given eq '--refill' : (() = $seq =~ /(?<!-)-r\b/g) % 2 ? !$default : $default;
+	    $out = `XDG_CONFIG_HOME=$env{XDG_CONFIG_HOME} COLUMNS=200 $mdee -n $seq $test_md 2>&1`;
+	    my $name = "default $default, $seq: " . ($on ? 'on' : 'off');
+	    $on ? like($out, qr/^greple .*refill=1/m, $name) : unlike($out, qr/refill=/, $name);
+	}
+    }
     open $fh, q(>), "$tmpdir/mdee/config.sh" or die;
     print $fh "default[refill]=0\n";
     close $fh;
     $out = `XDG_CONFIG_HOME=$tmpdir COLUMNS=200 $mdee -n $test_md 2>&1`;
     unlike($out, qr/refill=/, q(default[refill]=0 leaves refill off));
+    $out = `XDG_CONFIG_HOME=$tmpdir COLUMNS=200 $mdee -n -r $test_md 2>&1`;
+    like($out, qr/^greple .*refill=1/m, q(-r turns default[refill]=0 on));
 
     # fatchap adds lines, which puts the folding of refill off, so it
     # turns off the default but not the option
@@ -782,7 +804,7 @@ subtest q(refill option) => sub {
     $out = `XDG_CONFIG_HOME=$tmpdir COLUMNS=200 $mdee -n -t fatchap $test_md 2>&1`;
     unlike($out, qr/refill=/, q(fatchap turns off default[refill]));
     $out = `XDG_CONFIG_HOME=$tmpdir COLUMNS=200 $mdee -n -t fatchap -r $test_md 2>&1`;
-    like($out, qr/^greple .*refill=1/m, q(--refill works with fatchap));
+    like($out, qr/^greple .*refill=1/m, q(-r turns refill on with fatchap, which turns the default off));
     $out = `XDG_CONFIG_HOME=$tmpdir COLUMNS=200 $mdee -n -t fatchap --no-refill $test_md 2>&1`;
     unlike($out, qr/refill=/, q(--no-refill works with fatchap));
     $out = `XDG_CONFIG_HOME=$tmpdir COLUMNS=200 $mdee -n -t warm $test_md 2>&1`;

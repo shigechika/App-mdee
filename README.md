@@ -16,7 +16,8 @@ mdee - em·dee, Markdown Easy on the Eyes
      -f  --filter           shortcut for --style=filter
      -p  --plain            shortcut for --style=pager
          --[no-]fold        line folding (default: on)
-     -r  --[no-]refill      join paragraph lines (default: off)
+         --[no-]refill      join paragraph lines (default: off)
+     -r                     reverse the default of --refill
          --[no-]table       table formatting (default: on)
          --[no-]trim        trim cell spaces (default: on)
          --[no-]nup         nup paged output (default: on)
@@ -309,10 +310,18 @@ Use [tecolicom/tap](https://github.com/tecolicom/homebrew-tap):
     The `#.` and `#)` forms are the auto-numbered lists of Pandoc's
     Markdown.
 
-- **-r**, **--\[no-\]refill**
+- **--\[no-\]refill**
 
     Join the lines of each paragraph into one line.  Default is disabled;
     `default[refill]=1` in the configuration file enables it.
+
+- **-r**
+
+    Reverse the default of **--refill**: enable it when the default is
+    disabled, and disable it when `default[refill]=1` enables it, as for
+    a file which is not Markdown.  Each **-r** reverses it again, so
+    **-rr** gives the default back.  **--\[no-\]refill** given on the command
+    line takes effect over it.
 
     What a paragraph is, a Markdown parser decides: a run of lines at the
     top level, in a block quote, in a list item or in a definition body.

@@ -35,7 +35,8 @@ mdee - em·dee, Markdown Easy on the Eyes
      -f  --filter           shortcut for --style=filter
      -p  --plain            shortcut for --style=pager
          --[no-]fold        line folding (default: on)
-     -r  --[no-]refill      join paragraph lines (default: off)
+         --[no-]refill      join paragraph lines (default: off)
+     -r                     reverse the default of --refill
          --[no-]table       table formatting (default: on)
          --[no-]trim        trim cell spaces (default: on)
          --[no-]nup         nup paged output (default: on)
@@ -189,7 +190,8 @@ declare -A OPTS=(
     [         filter | f   !         # filter mode           ]=
     [          plain | p   !         # plain mode            ]=
     [           fold |               # line folding          ]=_
-    [         refill | r             # join paragraph lines  ]=_
+    [         refill |               # join paragraph lines  ]=_
+    [ reverse-refill | r  +          # reverse refill default]=0
     [          table |               # table formatting      ]=_
     [           trim |               # trim table cell spaces]=1
     [            nup |               # use nup               ]=_
@@ -503,9 +505,14 @@ while IFS= read -r _t; do
     fi
 done < <(uniq_array "${theme[@]}")
 
-# After the themes, because fatchap turns off the default
-[[ $refill == _ ]] && refill=${default[refill]:-}
-[[ $refill == 0 ]] && refill=
+# After the themes, because fatchap turns off the default; -r is the
+# reverse of it, when given an odd number of times and neither
+# --refill nor --no-refill is given
+if [[ $refill == _ ]]; then
+    refill=${default[refill]:-}
+    [[ $refill == 0 ]] && refill=
+    (( reverse_refill % 2 )) && { [[ $refill ]] && refill= || refill=1; }
+fi
 
 # Re-add config.sh settings after the themes so that they take precedence
 md_config+=("${_user_md_config[@]}") pass_md+=("${_user_pass_md[@]}")
@@ -1115,10 +1122,18 @@ Supported list markers: C<*>, C<+>, C<->, C<1.>, C<1)>, C<#.>, C<#)>.
 The C<#.> and C<#)> forms are the auto-numbered lists of Pandoc's
 Markdown.
 
-=item B<-r>, B<--[no-]refill>
+=item B<--[no-]refill>
 
 Join the lines of each paragraph into one line.  Default is disabled;
 C<default[refill]=1> in the configuration file enables it.
+
+=item B<-r>
+
+Reverse the default of B<--refill>: enable it when the default is
+disabled, and disable it when C<default[refill]=1> enables it, as for
+a file which is not Markdown.  Each B<-r> reverses it again, so
+B<-rr> gives the default back.  B<--[no-]refill> given on the command
+line takes effect over it.
 
 What a paragraph is, a Markdown parser decides: a run of lines at the
 top level, in a block quote, in a list item or in a definition body.
