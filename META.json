@@ -47,7 +47,7 @@
          "requires" : {
             "App::Greple" : "10.05",
             "App::Greple::tee" : "1.05",
-            "App::ansicolumn" : "1.70",
+            "App::ansicolumn" : "1.71",
             "App::ansiecho" : "0",
             "App::ansifold" : "1.38",
             "App::cat::v" : "0",
@@ -87,7 +87,7 @@
          "web" : "https://github.com/tecolicom/App-mdee"
       }
    },
-   "version" : "1.27",
+   "version" : "1.28",
    "x_contributors" : [
       "Kazumasa Utashiro <kaz@utashiro.com>",
       "renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>"
