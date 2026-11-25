@@ -510,7 +510,6 @@ done < <(uniq_array "${theme[@]}")
 # --refill nor --no-refill is given
 if [[ $refill == _ ]]; then
     refill=${default[refill]:-}
-    [[ $refill == 0 ]] && refill=
     (( reverse_refill % 2 )) && { [[ $refill ]] && refill= || refill=1; }
 fi
 

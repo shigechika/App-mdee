@@ -789,12 +789,13 @@ subtest q(refill option) => sub {
 	}
     }
     open $fh, q(>), "$tmpdir/mdee/config.sh" or die;
-    print $fh "default[refill]=0\n";
+    # a flag of getoptlong: empty is off, as --no-refill makes it
+    print $fh "default[refill]=\n";
     close $fh;
     $out = `XDG_CONFIG_HOME=$tmpdir COLUMNS=200 $mdee -n $test_md 2>&1`;
-    unlike($out, qr/refill=/, q(default[refill]=0 leaves refill off));
+    unlike($out, qr/refill=/, q(default[refill]= leaves refill off));
     $out = `XDG_CONFIG_HOME=$tmpdir COLUMNS=200 $mdee -n -r $test_md 2>&1`;
-    like($out, qr/^greple .*refill=1/m, q(-r turns default[refill]=0 on));
+    like($out, qr/^greple .*refill=1/m, q(-r turns default[refill]= on));
 
     # fatchap adds lines, which puts the folding of refill off, so it
     # turns off the default but not the option
