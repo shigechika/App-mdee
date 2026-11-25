@@ -714,6 +714,18 @@ subtest q(runin and runout options) => sub {
     like($later, qr/debug: nup .*--runin=4 --runout=4/, q(--runlen overrides earlier --runout));
 };
 
+subtest q(image option) => sub {
+    my $out = `$mdee -n --image=png,svg $test_md 2>&1`;
+    isnt($? >> 8, 0, q(--image with an unknown type fails));
+    like($out, qr/svg/, q(the error names the type));
+    for my $opt ('--image', '--image=png', '--image=png,jpeg,gif', '--no-image') {
+	$out = `$mdee -n $opt $test_md 2>&1`;
+	is($? >> 8, 0, qq($opt is accepted));
+    }
+    $out = `$mdee --help 2>&1`;
+    like($out, qr/--\[no-\]image\[=/, q(--help shows the types of --image));
+};
+
 # Test: output width option (-w) and --fold-width
 subtest q(refill option) => sub {
     my $out = `COLUMNS=200 $mdee -n --refill $test_md 2>&1`;

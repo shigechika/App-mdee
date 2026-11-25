@@ -44,6 +44,7 @@ em·dee (mdee: Markdown, Easy on the Eyes) is a Markdown *text* viewer command i
 - `t/15_front_matter.t` - front matter is shown as a code block (marks in place of colors), only at the top, not folded; `front_matter=0`
 - `t/17_table_br.t` - a `<br>` in a table cell breaks the cell (skipped with an ansicolumn that does not take U+2028 as a line break in a cell)
 - `t/18_intact.t` - `intact=table` joins the lines of a formatted table into one by US, the last newline kept, and the table is not folded as text
+- `t/19_image.t` - `image_types=png:jpeg:gif` (`Text::ANSI::Image`, `App::Greple::md::Image`): only the types listed, the rows of an image below a line which is an image, the APC sent to `image_tty`, `intact=image`, what is not shown, GitHub URLs of the repository, `--refill` below an image; the terminal is given by `image_term`
 - `t/10_blocks.t` - `App::Greple::md::Blocks`: both parsers report the same paragraph lines (skipped without one)
 - `t/Util.pm` - Test helper for greple-based tests
 - `t/runner/` - Submodule (p5-script-runner) for finding greple path
@@ -350,7 +351,7 @@ Early-processed regions (code blocks, inline code, comments, links) are replaced
 Steps are organized into three groups:
 
 ```perl
-my @protect_steps = qw(front_matter code_blocks comments image_links images links);
+my @protect_steps = qw(front_matter code_blocks comments image_blocks image_links images links);
 my @inline_steps  = qw(inline_code horizontal_rules bold_italic bold italic strike);
 my @final_steps   = qw(blockquotes);
 ```

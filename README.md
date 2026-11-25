@@ -25,6 +25,7 @@ mdee - em·dee, Markdown Easy on the Eyes
          --[no-]rule        use Unicode rules for tables (default: on)
     --ts --table-style=#    table style: lattice, 3line or simple (default: lattice)
          --cat-v            visualize whitespace via cat-v
+         --[no-]image[=#]   image types to show (default: png,jpeg,gif)
      -w  --width=#          output width (default: terminal width)
          --fold-width=#     fold width (default: pane width - 3 - run-in)
          --runin=#          run-in width for line breaking (default: 4)
@@ -443,6 +444,14 @@ Use [tecolicom/tap](https://github.com/tecolicom/homebrew-tap):
     and other invisible characters are made visible.  Newline
     visualization is disabled by default.
 
+- **--**\[**no-**\]**image**\[=_TYPES_\]
+
+    Show images in the terminal (default: on).  _TYPES_ is a list of
+    the types of images to show, separated by commas: `png`, `jpeg` and
+    `gif` (default: all of them).  **--image=png** shows PNG only, and
+    **--no-image** none.  They are shown only in the terminals that
+    support them; see ["IMAGES"](#images).
+
 - **-w** _N_, **--width**=_N_
 
     Set the output width in characters.  Default is the terminal
@@ -813,6 +822,81 @@ bold text, etc.).
 
         mdee -o README.pdf README.md
 
+# IMAGES
+
+**mdee** shows images in the terminal, below the line that refers to
+them.  The line itself is kept, so the output with `--no-image` is
+the same text without the images.  When the image is shown, the HTML
+tags of the line are dimmed in `code_mark`, like a code fence.
+
+## Which Images
+
+An image is shown when its line contains nothing else.  The line is
+one of:
+
+- a Markdown image, `![alt](file)`, or one in a link,
+`[![alt](file)](url)`;
+- an HTML `<img src="file">`, alone or inside `<p>`,
+`<div>`, `<a>` or `<center>`.  This is the form which
+is written in `=begin html` in POD and copied into README.
+
+Images inside a paragraph or a code block are not shown.
+
+## Image Files
+
+The file is read from the local disk, by a path relative to the
+Markdown file or an absolute path.  Nothing is fetched from the
+network, with one exception for GitHub URLs:
+
+    https://raw.githubusercontent.com/OWNER/REPO/BRANCH/PATH
+    https://github.com/OWNER/REPO/blob/BRANCH/PATH
+
+These are read as the file _PATH_ in the git work tree of the Markdown
+file, if one of its remotes is `github.com/OWNER/REPO`.  The branch is
+ignored.  The README files of CPAN distributions often refer to their
+images this way.
+
+PNG, JPEG and GIF files are shown, those of the types given to
+**--image**.  The type is detected from the content, not the file name.  JPEG and GIF are converted to PNG with
+`sips` (macOS) or ImageMagick; without either, they are not shown.
+A PNG much larger than the screen is reduced by the same tools, to
+send less data; without them, it is sent as it is.
+A file that is not found is not shown.
+
+## Size
+
+An image is shown at its pixel size, reduced to fit within the fold
+width and within the terminal height minus four lines.  With nup, an
+image is not split across panes: if it does not fit in the rest of a
+pane, it starts in the next one (requires
+[ansicolumn(1)](https://metacpan.org/pod/App%3A%3Aansicolumn) 1.71 or later).
+
+## Conditions
+
+Images are shown only when all of the following are true:
+
+- The output goes to the terminal: no `-o`, `-T` or `--cat-v`.
+- The terminal is iTerm2 3.7.3 or later (`TERM_PROGRAM=iTerm.app`),
+Ghostty (`TERM_PROGRAM=ghostty`) or kitty (`TERM=xterm-kitty`).
+- The pager is `less` 632 or later, which supports
+`LESSUTFCHARDEF`.
+
+The terminal is identified from the environment.  A terminal started
+from another one (for example, by `open -a` from iTerm2) may inherit
+the wrong `TERM_PROGRAM`.  Use `--no-image` in that case.
+
+## How It Works
+
+Images are drawn with the Unicode placeholders of the kitty graphics
+protocol.  Each row of an image is a line of special characters, so
+it is laid out in columns and paged like text, but never folded.  The image data is sent
+directly to the terminal once.
+
+As the rows are text, a search in `less` can match them, as with
+`.*`.  The matched cells are drawn in the color of the search
+highlight instead of the image; `ESC-u`, which turns the highlight
+off, shows the image again.
+
 # THEMES
 
 A theme changes how the document looks: the colors, the marks that
@@ -1159,6 +1243,18 @@ through `nup`), the following environment variables affect behavior.
     Default: `-R`.  The `-R` option is required for ANSI color
     sequences to be displayed correctly.
 
+    **mdee** always adds `-X`, whether `LESS` is defined or not.  With
+    it, `less` does not use the alternate screen: the last page stays on
+    the screen after `less` ends, and images (see ["IMAGES"](#images)) are shown
+    on the same screen that their data is sent to.  To use the alternate
+    screen, give `-+X` in the pager command, such as
+    `NUP_PAGER="less -+X"`.
+
+- `LESSUTFCHARDEF`
+
+    When images are shown, **mdee** adds `10EEEE:p`, so that `less`
+    treats the placeholder character of the images as printable.
+
 - `LESSANSIENDCHARS`
 
     Default: `mK`.  This tells `less` to recognize ANSI sequences
@@ -1212,6 +1308,14 @@ does not override them.
     The rules that `cjk_friendly=1` follows.  The proposal comes from
     [commonmark-spec issue #650, Emphasis with CJK punctuation](https://github.com/commonmark/commonmark-spec/issues/650),
     open since 2020.
+
+- [Terminal graphics protocol, Unicode placeholders](https://sw.kovidgoyal.net/kitty/graphics-protocol/#unicode-placeholders)
+
+    The protocol by which images are shown (see ["IMAGES"](#images)).
+
+- [Text::ANSI::Image](https://metacpan.org/pod/Text%3A%3AANSI%3A%3AImage)
+
+    Draws the images as lines of text by the protocol.
 
 - [https://github.com/tecolicom/App-mdee](https://github.com/tecolicom/App-mdee)
 
