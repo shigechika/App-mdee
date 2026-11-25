@@ -1074,12 +1074,11 @@ my %colorize = (
                 rows  => $config->{image_rows},
             ) : ();
             if (@rows) {
-                # the HTML tags of a shown image are markup only, put in
-                # code_mark as a code fence is
-                if (defined $attr) {
-                    my($indent, $tags) = $line =~ /^(\h*)(.*?)\h*$/;
-                    $line = $indent . protect(md_color('code_mark', $tags));
-                }
+                # the line of a shown image is markup only, the Markdown
+                # or the HTML tags: it is put as it is in code_mark, as a
+                # code fence is
+                my($indent, $tags) = $line =~ /^(\h*)(.*?)\h*$/;
+                $line = $indent . protect(md_color('code_mark', $tags));
                 my $keep = intact("image");
                 # kept in one pane, the line of the image goes with its rows
                 push @added, [ $at, $keep ? 0 : scalar @rows ];
