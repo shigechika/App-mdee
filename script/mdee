@@ -1880,14 +1880,17 @@ User configuration is loaded from:
 This is a shell script that can set defaults and override colors:
 
     # ~/.config/mdee/config.sh
-    default[mode]='dark'             # set default mode
-    default[theme]='warm'            # set default theme(s)
-    default[style]='pager'           # set default style
+    default[mode]=dark               # set default mode
+    default[theme]=warm              # set default theme(s)
+    default[style]=pager             # set default style
     default[width]=170               # set default output width
     default[fold_width]=80           # set default fold width
     default[refill]=1                # join paragraph lines
     default[lateral]=1               # all pages in one row
-    default[base_color]='DarkCyan'   # set default base color
+    default[base_color]=DarkCyan     # set default base color
+
+A value which has spaces or characters special to the shell, as C<< < >>,
+C<< > >>, C<;> or C<|>, is put in quotes: C<< theme_light[base]='<DarkCyan>=y25' >>.
 
 The C<default> associative array supports the following keys:
 
