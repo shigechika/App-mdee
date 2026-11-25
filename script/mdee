@@ -1918,14 +1918,8 @@ The C<default> associative array supports the following keys:
 
 =back
 
-C<default[refill]> and C<default[lateral]> are flags as the options
-are: any value which is not empty enables them, and the empty one
-disables them.  C<0> enables them too, as C<no> does; leave them
-unset or empty to disable them:
-
-    default[refill]=1                # on
-    default[refill]=                 # off
-    default[refill]=0                # on, not off
+C<default[refill]> and C<default[lateral]> are on with any value,
+C<1>, C<0> and C<no> alike, and off when empty.
 
 B<Overriding theme colors>
 
