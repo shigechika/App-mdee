@@ -1042,6 +1042,15 @@ The `default` associative array supports the following keys:
 - `default[pane]` - Corresponds to `--pane` (e.g., `2` or `2,2`)
 - `default[base_color]` - Corresponds to `--base-color` (e.g., `DarkCyan`)
 
+`default[refill]` and `default[lateral]` are flags as the options
+are: any value which is not empty enables them, and the empty one
+disables them.  `0` enables them too, as `no` does; leave them
+unset or empty to disable them:
+
+    default[refill]=1                # on
+    default[refill]=                 # off
+    default[refill]=0                # on, not off
+
 **Overriding theme colors**
 
 Config.sh can modify theme variables directly, using the same
