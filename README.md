@@ -886,7 +886,7 @@ pane, it starts in the next one (requires
 Images are shown only when all of the following are true:
 
 - The output goes to the terminal or to a pipe, not to a file:
-no `-o`, `-T` or `--cat-v`.  Through a pipe, the image data is
+no `-o` or `--cat-v` (see below for paper).  Through a pipe, the image data is
 still sent to the terminal, and the program at the other end shows
 the rows, as `mdee -f file.md | LESSUTFCHARDEF=10EEEE:p less -R`
 does.
@@ -898,6 +898,12 @@ Ghostty (`TERM_PROGRAM=ghostty`) or kitty (`TERM=xterm-kitty`).
 The terminal is identified from the environment.  A terminal started
 from another one (for example, by `open -a` from iTerm2) may inherit
 the wrong `TERM_PROGRAM`.  Use `--no-image` in that case.
+
+On paper (`-T`, or `-o` with a PDF file), the images are drawn by
+**ansi2pdf** instead: the rows of an image tell it the file, and
+nothing is sent to the terminal.  PNG and JPEG are drawn; GIF is not.
+This requires **ansi2pdf** that knows the rows of an image; an older
+one prints them as characters it has no glyph for.
 
 ## How It Works
 

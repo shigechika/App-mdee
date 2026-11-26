@@ -356,13 +356,14 @@ fi
 # choose it.  nup knows which it is and how many columns a sheet has
 # (-P and the rows give the lines of a sheet, which decide the font).
 : ${device:=} ${output:=}
-_paper= _paper_cols=
+_paper= _paper_cols= _paper_lines=
 if [[ $device || $output ]]; then
     _geom=$(nup "${pass_nup[@]}" ${device:+-T} ${device:+"$device"} \
                 ${output:+-o} ${output:+"$output"} --geometry) &&
-        [[ $_geom =~ ^([0-9]+)\ [0-9]+\ (tty|pdf)$ ]] ||
+        [[ $_geom =~ ^([0-9]+)\ ([0-9]+)\ (tty|pdf)$ ]] ||
         die "failed to get the size of the device from nup (App::nup 1.13 or later is required)"
-    [[ ${BASH_REMATCH[2]} == pdf ]] && _paper=1 _paper_cols=${BASH_REMATCH[1]}
+    [[ ${BASH_REMATCH[3]} == pdf ]] &&
+        _paper=1 _paper_cols=${BASH_REMATCH[1]} _paper_lines=${BASH_REMATCH[2]}
 fi
 
 # Set mode: explicit option > light on paper > config default > terminal detection > "light"
@@ -631,7 +632,7 @@ run_greple() {
     # Add fold/table/rule/heading_markup params
     [[ $fold  ]] && config_params+=("fold=1,fold_width=$fold_width,fold_runin=$runin,fold_runout=$runout" "table_width=$table_width")
     [[ $_intact_parts ]] && config_params+=("intact=$_intact_parts")
-    [[ $_image ]] && config_params+=("image_types=$_image")
+    [[ $_image ]] && config_params+=("image_types=$_image" ${_image_params[@]+"${_image_params[@]}"})
     [[ $table ]] && config_params+=("table=1") || config_params+=("table=0")
     [[ $trim  ]] && config_params+=("table_trim=1") || config_params+=("table_trim=0")
     [[ $rule  ]] && config_params+=("rule=1")  || config_params+=("rule=0")
@@ -791,11 +792,18 @@ if [[ -v image ]]; then
         esac
     done
 fi
-_image=
+_image= _image_params=()
 if [[ $_image_types && ( -t 1 || -p /dev/stdout ) && ! $output && ! $_paper && ! ${cat_v:-} ]] \
     && image_terminal && image_pagers; then
     _image=${_image_types//,/:}
     export LESSUTFCHARDEF="${LESSUTFCHARDEF:+$LESSUTFCHARDEF,}10EEEE:p"
+elif [[ $_image_types && $_paper && ! ${cat_v:-} ]]; then
+    # On paper, ansi2pdf draws the images, told of their files by the
+    # rows (image_osc); nothing goes to the terminal.  A cell of
+    # ansi2pdf is half a character wide and 1.2 high.
+    _image=${_image_types//,/:}
+    _image_params=(image_osc=1 image_tty=/dev/null
+                   "image_term=${_paper_cols}x${_paper_lines}:10x24")
 fi
 # the parts kept intact by ansicolumn: tables, and images in one pane
 _intact_parts=
@@ -1735,7 +1743,7 @@ Images are shown only when all of the following are true:
 =over 4
 
 =item * The output goes to the terminal or to a pipe, not to a file:
-no C<-o>, C<-T> or C<--cat-v>.  Through a pipe, the image data is
+no C<-o> or C<--cat-v> (see below for paper).  Through a pipe, the image data is
 still sent to the terminal, and the program at the other end shows
 the rows, as C<mdee -f file.md | LESSUTFCHARDEF=10EEEE:p less -R>
 does.
@@ -1751,6 +1759,12 @@ C<LESSUTFCHARDEF>.
 The terminal is identified from the environment.  A terminal started
 from another one (for example, by C<open -a> from iTerm2) may inherit
 the wrong C<TERM_PROGRAM>.  Use C<--no-image> in that case.
+
+On paper (C<-T>, or C<-o> with a PDF file), the images are drawn by
+B<ansi2pdf> instead: the rows of an image tell it the file, and
+nothing is sent to the terminal.  PNG and JPEG are drawn; GIF is not.
+This requires B<ansi2pdf> that knows the rows of an image; an older
+one prints them as characters it has no glyph for.
 
 =head2 How It Works
 

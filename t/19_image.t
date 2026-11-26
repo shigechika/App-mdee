@@ -89,6 +89,15 @@ my $doc = md('doc.md', "# Title\n\n![logo](a.png)\n\ntext with ![inline](a.png) 
     like($sent, qr/;\Q$data\E\e\\$/, 'the data of the image is sent');
 }
 
+# image_osc=1: each row tells the file of the image, for ansi2pdf
+{
+    unlike(mdee_out("$base,$img", $doc), qr/\e\]7771;/, 'no OSC by default');
+    my @rows = grep { /$PH/ } split /\n/, mdee_out("$base,$img,image_osc=1", $doc);
+    is(scalar @rows, 2, 'image_osc=1: two rows');
+    like($_, qr/^\e\]7771;i=\d+,c=4,r=2;\Q$dir\E\/a\.png\e\\/, 'image_osc=1: a row begins with the OSC')
+	for @rows;
+}
+
 # intact=image: the line of the image and its rows are joined by GS,
 # for ansicolumn --intact to keep them in one pane
 {

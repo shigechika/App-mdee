@@ -294,6 +294,9 @@ Available parameters:
                     columns and rows and the width and height of a
                     cell in pixels (default: read from /dev/tty)
     image_tty       file to send the image data to (default: /dev/tty)
+    image_osc       1: each row of an image tells its file by a private
+                    OSC, for ansi2pdf, which draws the image itself
+                    (default: 0)
     table_style     lattice: column separators (default; pipe is
                     another name); 3line: columns separated by spaces,
                     a rule above and below the table and per column
@@ -628,6 +631,7 @@ my $config = Getopt::EX::Config->new(
     image_rows      => 0,        # rows that an image may take (0: those of the terminal but four)
     image_term      => '',       # size of the terminal, COLSxROWS:WxH (default: of /dev/tty)
     image_tty       => '',       # where the data of the images goes (default: /dev/tty)
+    image_osc       => 0,        # tell the file of each image in its rows, for ansi2pdf
     rule            => 1,        # box-drawing characters for tables
     table_style     => 'lattice', # lattice (or pipe): column separators; 3line, simple: spaces and rules only
     table_gap       => 1,        # columns from a cell to the mark place of the next column
@@ -728,7 +732,7 @@ sub finalize {
                        "colorize!", "nofork!", "fold!", "refill!", "refill_parser=s", "front_matter!", "fold_width=i", "fold_runin=i", "fold_runout=i",
                        "table!", "table_trim!",
                        "table_width=i", "table_cell=s", "table_wrap_mark=s", "table_cell_mark=s", "rule!", "table_style=s", "table_gap=i",
-                       "table_runin=i", "table_runout=i", "table_boundary=s", "table_linebreak=s", "intact=s", "image_types=s", "image_rows=i", "image_term=s", "image_tty=s",
+                       "table_runin=i", "table_runout=i", "table_boundary=s", "table_linebreak=s", "intact=s", "image_types=s", "image_rows=i", "image_term=s", "image_tty=s", "image_osc=i",
                        "heading_markup|hm:s", "cjk_friendly!", "tick_open=s", "tick_close=s",
                        "hashed=s%",
                        "colormap|cm=s" => \@opt_cm,
@@ -1048,6 +1052,7 @@ my %colorize = (
             types  => \@types,
             term   => $config->{image_term},
             tty    => $config->{image_tty} || '/dev/tty',
+            osc    => $config->{image_osc},
         );
         my @added;
         my $dir = defined $current_file && $current_file =~ m{^(.*)/} ? $1 : ".";

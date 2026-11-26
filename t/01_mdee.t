@@ -969,6 +969,13 @@ subtest 'device and output' => sub {
     unlike($a4, qr/less/, '-T a4: no pager');
     like($run->('-T a4 --mode=dark'), qr/mode=dark/, '--mode is kept');
 
+    # images on paper: ansi2pdf draws them, told of their files by the
+    # rows; nothing goes to the terminal, which is not asked either
+    my($lines) = `ansi2pdf -C1 --no-border -L -p a4 --geometry` =~ /^\d+ (\d+)/;
+    like($a4, qr/image_types=png:jpeg:gif,image_osc=1,image_tty=\/dev\/null,image_term=${w}x${lines}:10x24\b/,
+         '-T a4: images for ansi2pdf');
+    unlike($run->('-T a4 --no-image'), qr/image_/, '-T a4 --no-image: no images');
+
     # one pane goes through nup as well
     my $a4p = $run->('-T a4p');
     my $wp = $geom->('-p a4p');
