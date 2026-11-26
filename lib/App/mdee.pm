@@ -4,7 +4,7 @@ package App::mdee;
 # POD documentation is appended from script/mdee at release time.
 # See minil.toml for details.
 
-our $VERSION = "1.28";
+our $VERSION = "1.29";
 
 1;
 =encoding utf-8
@@ -66,7 +66,7 @@ mdee - em·dee, Markdown Easy on the Eyes
 
 =head1 VERSION
 
-Version 1.28
+Version 1.29
 
 =cut
 =head1 DESCRIPTION
@@ -952,7 +952,11 @@ Images are shown only when all of the following are true:
 
 =over 4
 
-=item * The output goes to the terminal: no C<-o>, C<-T> or C<--cat-v>.
+=item * The output goes to the terminal or to a pipe, not to a file:
+no C<-o> or C<--cat-v> (see below for paper).  Through a pipe, the image data is
+still sent to the terminal, and the program at the other end shows
+the rows, as C<mdee -f file.md | LESSUTFCHARDEF=10EEEE:p less -R>
+does.
 
 =item * The terminal is iTerm2 3.7.3 or later (C<TERM_PROGRAM=iTerm.app>),
 Ghostty (C<TERM_PROGRAM=ghostty>) or kitty (C<TERM=xterm-kitty>).
@@ -965,6 +969,12 @@ C<LESSUTFCHARDEF>.
 The terminal is identified from the environment.  A terminal started
 from another one (for example, by C<open -a> from iTerm2) may inherit
 the wrong C<TERM_PROGRAM>.  Use C<--no-image> in that case.
+
+On paper (C<-T>, or C<-o> with a PDF file), the images are drawn by
+B<ansi2pdf> instead: the rows of an image tell it the file, and
+nothing is sent to the terminal.  PNG and JPEG are drawn; GIF is not.
+This requires B<ansi2pdf> that knows the rows of an image; an older
+one prints them as characters it has no glyph for.
 
 =head2 How It Works
 
