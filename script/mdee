@@ -717,8 +717,10 @@ pass_nup+=("--runin=$runin" "--runout=$runout" "--boundary=$boundary")
 
 # Images (--image): the md module puts the rows of an image below a
 # line which is an image, and sends its data to the terminal (see
-# Text::ANSI::Image).  Only when the output is the terminal, and
-# the terminal and the pager can show them: the Unicode placeholders
+# Text::ANSI::Image).  Only when the output is the terminal or a
+# pipe, which may go to a pager (not a file, where the rows would stay
+# without the image), and the terminal and the pager can show them:
+# the Unicode placeholders
 # of the kitty graphics protocol, and less 632 or later, which takes
 # the placeholder as a printable character with LESSUTFCHARDEF.
 # TERM_PROGRAM is inherited by a terminal started from another, so it
@@ -790,7 +792,7 @@ if [[ -v image ]]; then
     done
 fi
 _image=
-if [[ $_image_types && -t 1 && ! $output && ! $_paper && ! ${cat_v:-} ]] \
+if [[ $_image_types && ( -t 1 || -p /dev/stdout ) && ! $output && ! $_paper && ! ${cat_v:-} ]] \
     && image_terminal && image_pagers; then
     _image=${_image_types//,/:}
     export LESSUTFCHARDEF="${LESSUTFCHARDEF:+$LESSUTFCHARDEF,}10EEEE:p"
@@ -1732,7 +1734,11 @@ Images are shown only when all of the following are true:
 
 =over 4
 
-=item * The output goes to the terminal: no C<-o>, C<-T> or C<--cat-v>.
+=item * The output goes to the terminal or to a pipe, not to a file:
+no C<-o>, C<-T> or C<--cat-v>.  Through a pipe, the image data is
+still sent to the terminal, and the program at the other end shows
+the rows, as C<mdee -f file.md | LESSUTFCHARDEF=10EEEE:p less -R>
+does.
 
 =item * The terminal is iTerm2 3.7.3 or later (C<TERM_PROGRAM=iTerm.app>),
 Ghostty (C<TERM_PROGRAM=ghostty>) or kitty (C<TERM=xterm-kitty>).

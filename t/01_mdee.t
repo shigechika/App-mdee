@@ -39,6 +39,10 @@ $ENV{XDG_CONFIG_HOME} = $empty_config;
 # Do not ask the terminal for its background color: the reply of a
 # busy terminal can come after termcolor gave up and shows up as input.
 $ENV{TERM_LUMINANCE} = 100;
+# Images are shown to a pipe, as the output of the tests: not on the
+# terminal the tests run in, unless a test asks for it
+delete @ENV{qw(TERM_PROGRAM TERM_PROGRAM_VERSION)};
+$ENV{TERM} = 'xterm-256color' if ($ENV{TERM} // '') eq 'xterm-kitty';
 
 # Check if mdee exists
 ok(-x $mdee, 'mdee is executable');
@@ -724,6 +728,16 @@ subtest q(image option) => sub {
     }
     $out = `$mdee --help 2>&1`;
     like($out, qr/--\[no-\]image\[=/, q(--help shows the types of --image));
+
+    # shown to a pipe, which may go to a pager; not to a file, where
+    # the rows would stay without the image
+    local $ENV{TERM_PROGRAM} = 'ghostty';
+    $out = `$mdee -n --no-pager $test_md 2>&1`;
+    like($out, qr/image_types=png:jpeg:gif/, q(images are shown to a pipe));
+    my $file = "$empty_config/out";
+    system "$mdee -n --no-pager $test_md > $file 2>&1";
+    $out = do { open my $fh, '<', $file or die; local $/; <$fh> };
+    unlike($out, qr/image_types=/, q(images are not shown to a file));
 };
 
 # Test: output width option (-w) and --fold-width

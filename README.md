@@ -885,7 +885,11 @@ pane, it starts in the next one (requires
 
 Images are shown only when all of the following are true:
 
-- The output goes to the terminal: no `-o`, `-T` or `--cat-v`.
+- The output goes to the terminal or to a pipe, not to a file:
+no `-o`, `-T` or `--cat-v`.  Through a pipe, the image data is
+still sent to the terminal, and the program at the other end shows
+the rows, as `mdee -f file.md | LESSUTFCHARDEF=10EEEE:p less -R`
+does.
 - The terminal is iTerm2 3.7.3 or later (`TERM_PROGRAM=iTerm.app`),
 Ghostty (`TERM_PROGRAM=ghostty`) or kitty (`TERM=xterm-kitty`).
 - The pager is `less` 632 or later, which supports
