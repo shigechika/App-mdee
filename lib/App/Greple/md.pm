@@ -582,6 +582,7 @@ it under the same terms as Perl itself.
 =cut
 
 use URI::Escape;
+use List::Util qw(min);
 use Text::ANSI::Fold qw($csi_re $osc_re);
 use Text::ANSI::Fold::Util qw(ansi_width);
 use Getopt::EX::Config;
@@ -1242,6 +1243,9 @@ sub colorize {
 # What joins the lines of a part kept intact (config intact) into one
 # line, as ansicolumn --intact takes it
 my $INTACT_SEP = "\x1F";
+# What joins lines kept in one pane, the rows of an image or the lines
+# of a row of a table
+my $GROUP_SEP = "\x1D";
 
 # Whether the part ("table") is kept intact
 sub intact {
@@ -1269,9 +1273,11 @@ sub table_regions {
           [^\n]* [ $bar $cross ] [^\n]* \n         # ... with a separator somewhere
     }xxm;
     my $sep = qr{ (?= [^\n]* [ $cross | ] ) [ $rule $cross | - ]+ \n }xx;
-    # a table kept intact is a line with UNIT SEPARATORs, which come
-    # from nowhere else: remove_controls() takes them out of the text
-    return match_regions(pattern => qr/^[^\n]*$INTACT_SEP[^\n]*\n/m) if intact('table');
+    # a table kept intact is a line with UNIT SEPARATORs, or GROUP
+    # SEPARATORs alone when it has one row, which come from nowhere else
+    # but the rows of an image: remove_controls() takes them out of the
+    # text
+    return match_regions(pattern => qr/^[^\n]*[$INTACT_SEP$GROUP_SEP][^\n]*\n/m) if intact('table');
     match_regions(pattern => qr/ (?= (?:$row)*? $sep ) (?:$row){3,} /x);
 }
 
@@ -1339,7 +1345,8 @@ sub refill_block {
 }
 
 # The line ranges that refill() joined, as [first, last] in the text
-# after joining, and the formatted tables, as [first line, lines added],
+# after joining, and the formatted tables, as [first line, lines added,
+# lines before formatting],
 # both for the current file.  refill_regions() turns them into the
 # regions that --fold-by folds.
 our @refill_lines;
@@ -1425,9 +1432,14 @@ sub refill_regions {
     my $end = length $_;
     my @regions;
     for my $range (@refill_lines) {
-        for my $line ($range->[0] .. $range->[1]) {
+        LINE: for my $line ($range->[0] .. $range->[1]) {
             my $shift = 0;
             for my $t (@table_shift) {
+                # A line of a table is not folded.  A parser without
+                # tables (libcmark) reports a table as a paragraph, and
+                # its lines after the first are not lines any more when
+                # the table is joined into one (intact=table).
+                next LINE if $t->[0] <= $line and $line < $t->[0] + $t->[2];
                 $shift += $t->[1] if $t->[0] < $line;
             }
             my $n = $line + $shift;
@@ -1599,13 +1611,15 @@ sub format_table {
         # How cells are wrapped is given explicitly, so that it does not
         # change with the user's ~/.ansicolumnrc
         my @wrap = map { "--$_=" . $config->{"table_$_"} } qw(runin runout boundary linebreak);
+        # kept intact, the lines of a row come joined by GS (see below)
+        push @wrap, '--table-group' if intact('table');
         my $formatted = call_ansicolumn($block, @sep_opt, '-o', $sep, '-t', '--cu=1', @align, @fit, @wrap);
         my $table = fix_separator($formatted, $sep);
         if ($open) {
             # blank the column separators and add the rules
             $table =~ tr/\x{2502}\x{253C}\x{251C}\x{2524}/    /;
             if ($style eq '3line') {
-                my($first) = $table =~ /^(.*)$/m;
+                my($first) = $table =~ /^([^\n$GROUP_SEP]*)/;
                 my $rule = "\x{2500}" x ansi_width($first);
                 $table = "$rule\n$table$rule\n";
             } else {
@@ -1618,8 +1632,29 @@ sub format_table {
         # SEPARATOR, the last newline kept, for ansicolumn --intact,
         # which lays them out without folding them.  Nothing after this
         # takes a table by its lines but table_regions().
-        $table =~ s/\n(?=.)/$INTACT_SEP/gs if intact('table');
-        push @table_shift, [ $line, ($table =~ tr/\n//) - $lines ];
+        #
+        # The lines of a row come from ansicolumn joined by GROUP
+        # SEPARATOR (--table-group), which --intact keeps in one pane.
+        # The header, the rule below it and the first row are joined
+        # so too, and so is a rule below the table (3line, simple) with
+        # the last row: a pane does not end between them.
+        if (intact('table')) {
+            my @rows = split /\n/, $table;
+            # the rule below the header: the first rule after a line
+            # which is not one (3line has one above the header)
+            my $head;
+            for my $i (1 .. $#rows) {
+                $rows[$i] =~ /^[\x{2500}\x{253C}\x{251C}\x{2524}|\- ]+$/ or next;
+                $head = $i;
+                last;
+            }
+            my %glue = map { $_ => 1 } 1 .. min(($head // 0) + 1, $#rows);
+            $glue{$#rows} = 1 if $open and @rows > 1;
+            $table = $rows[0] . join('', map {
+                ($glue{$_} ? $GROUP_SEP : $INTACT_SEP) . $rows[$_]
+            } 1 .. $#rows) . "\n";
+        }
+        push @table_shift, [ $line, ($table =~ tr/\n//) - $lines, $lines ];
         $table;
     }mgep;
     # the separators of mark_line_breaks() left out of the tables
