@@ -792,9 +792,13 @@ if [[ -v image ]]; then
         esac
     done
 fi
+# The standard output is a pipe: bash stats /dev/stdout as a file
+# where the system has one, which is the pipe itself on Linux but a
+# device of its own on BSD and Solaris, so perl looks at the fd
+stdout_pipe() { perl -e 'exit !-p STDOUT'; }
 _image= _image_params=()
-if [[ $_image_types && ( -t 1 || -p /dev/stdout ) && ! $output && ! $_paper && ! ${cat_v:-} ]] \
-    && image_terminal && image_pagers; then
+if [[ $_image_types && ! $output && ! $_paper && ! ${cat_v:-} ]] \
+    && { [[ -t 1 ]] || stdout_pipe; } && image_terminal && image_pagers; then
     _image=${_image_types//,/:}
     export LESSUTFCHARDEF="${LESSUTFCHARDEF:+$LESSUTFCHARDEF,}10EEEE:p"
 elif [[ $_image_types && $_paper && ! ${cat_v:-} ]]; then
