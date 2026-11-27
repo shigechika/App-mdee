@@ -2,6 +2,12 @@ Revision history for Perl extension App-mdee
 
 {{$NEXT}}
 
+1.31 2026-11-27T11:08:34Z
+
+    - --keep TYPE=WHAT (default[keep] in config.sh) tells what of a
+      block is kept in one pane of nup: for table, none, row, head
+      (the default, as before) or all
+
 1.30 2026-11-27T02:51:27Z
 
     - Require App::nup 1.26, and give it the output width by -w and

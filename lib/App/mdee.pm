@@ -4,7 +4,7 @@ package App::mdee;
 # POD documentation is appended from script/mdee at release time.
 # See minil.toml for details.
 
-our $VERSION = "1.30";
+our $VERSION = "1.31";
 
 1;
 =encoding utf-8
@@ -35,6 +35,7 @@ mdee - em·dee, Markdown Easy on the Eyes
      -L  --[no-]lateral     all pages in one row, scrolled sideways
          --[no-]rule        use Unicode rules for tables (default: on)
     --ts --table-style=#    table style: lattice, 3line or simple (default: lattice)
+         --keep TYPE=WHAT   kept in one pane: table=none|row|head|all (default: table=head)
          --cat-v            visualize whitespace via cat-v
          --[no-]image[=#]   image types to show (default: png,jpeg,gif)
      -w  --width=#          output width (default: terminal width)
@@ -66,7 +67,7 @@ mdee - em·dee, Markdown Easy on the Eyes
 
 =head1 VERSION
 
-Version 1.30
+Version 1.31
 
 =cut
 =head1 DESCRIPTION
@@ -476,6 +477,43 @@ last of them is the column separator, and the others are spaces at the
 right of the cell.  With C<table_gap=2> a cell of C<lattice> has a
 space on both sides; the spaces at the right end of the table are then
 left out when the table does not fit the width with them.
+
+=item B<--keep> I<TYPE>=I<WHAT>[,...]
+
+Tell what of a block of the I<TYPE> is kept in one pane of nup, so
+that a pane does not end inside it.  The block goes to the next pane
+when that part does not fit in the rest of the pane.  The option can
+be repeated, and the settings can be joined by commas:
+C<--keep table=all>.  C<table> is the only I<TYPE> for now, with
+these values of I<WHAT> (default: C<head>):
+
+=over 4
+
+=item C<none>
+
+Nothing: a pane may end between any two lines of a table.
+
+=item C<row>
+
+The lines of a row, which has more than one line when a cell is
+wrapped.
+
+=item C<head>
+
+Also the header, the rule below it and the first row, and with
+C<3line> and C<simple>, the last row and the rule below it.
+
+=item C<all>
+
+The whole table.  A table longer than a pane is laid out as lines,
+and may be divided anywhere.
+
+=back
+
+This has an effect only when tables are kept intact: with nup, when
+folding and table formatting are on, and without C<--cat-v>.
+C<default[keep]> in the configuration file gives the settings of the
+types not given on the command line: C<default[keep]=table=all>.
 
 =item B<--cat-v>
 
@@ -1117,6 +1155,7 @@ This is a shell script that can set defaults and override colors:
     default[fold_width]=80           # set default fold width
     default[refill]=1                # join paragraph lines
     default[lateral]=1               # all pages in one row
+    default[keep]=table=all          # a table in one pane
     default[base_color]=DarkCyan     # set default base color
 
 A value which has spaces or characters special to the shell, as C<< < >>,
@@ -1139,6 +1178,8 @@ The C<default> associative array supports the following keys:
 =item C<default[refill]> - Corresponds to C<--refill> (C<1> to enable)
 
 =item C<default[lateral]> - Corresponds to C<--lateral> (C<1> to enable)
+
+=item C<default[keep]> - Corresponds to C<--keep> (e.g., C<table=all>)
 
 =item C<default[pane_width]> - Corresponds to C<--pane-width> (e.g., C<100>)
 
