@@ -283,10 +283,11 @@ Available parameters:
                     joins the lines of a formatted table by US;
                     "image" joins an image line and the rows of its
                     image by GS, to keep them in one pane
-    table_keep      with intact=table, what of a table is kept in
-                    one pane, joined by GS: none, row (the lines of
-                    a row), head (also the header, its rule and
-                    the first row) or all (default: head)
+    keep.TYPE       what of a block of the TYPE is kept in one pane,
+                    joined by GS; keep.table, with intact=table:
+                    none, row (the lines of a row), head (also the
+                    header, its rule and the first row) or all
+                    (default: head)
     image_types     types of images to show, separated by colons:
                     png, jpeg and gif; the rows of an image are put
                     below a line which is an image, and its data is
@@ -632,7 +633,7 @@ my $config = Getopt::EX::Config->new(
     table_boundary  => 'word',   # fold boundary in wrapped cells
     table_linebreak => 'all',    # line break (kinsoku) mode in wrapped cells
     intact          => '',       # parts kept intact by ansicolumn --intact (table, image)
-    table_keep      => 'head',    # intact=table: what is kept in one pane (none, row, head, all)
+    keep            => { table => 'head' },  # what is kept in one pane, per type of block
     image_types     => '',       # types of images shown, colon separated (png:jpeg:gif)
     image_rows      => 0,        # rows that an image may take (0: those of the terminal but four)
     image_term      => '',       # size of the terminal, COLSxROWS:WxH (default: of /dev/tty)
@@ -738,7 +739,7 @@ sub finalize {
                        "colorize!", "nofork!", "fold!", "refill!", "refill_parser=s", "front_matter!", "fold_width=i", "fold_runin=i", "fold_runout=i",
                        "table!", "table_trim!",
                        "table_width=i", "table_cell=s", "table_wrap_mark=s", "table_cell_mark=s", "rule!", "table_style=s", "table_gap=i",
-                       "table_runin=i", "table_runout=i", "table_boundary=s", "table_linebreak=s", "intact=s", "table_keep=s", "image_types=s", "image_rows=i", "image_term=s", "image_tty=s", "image_osc=i",
+                       "table_runin=i", "table_runout=i", "table_boundary=s", "table_linebreak=s", "intact=s", "keep=s%", "image_types=s", "image_rows=i", "image_term=s", "image_tty=s", "image_osc=i",
                        "heading_markup|hm:s", "cjk_friendly!", "tick_open=s", "tick_close=s",
                        "hashed=s%",
                        "colormap|cm=s" => \@opt_cm,
@@ -1639,7 +1640,7 @@ sub format_table {
         # takes a table by its lines but table_regions().
         #
         # What is kept in one pane is joined by GROUP SEPARATOR, which
-        # --intact keeps together (table_keep): with "row", the lines of
+        # --intact keeps together (keep.table): with "row", the lines of
         # a row, which come from ansicolumn so (--table-group); with
         # "head", also the header, the rule below it and the first
         # row, and a rule below the table (3line, simple) with the last
@@ -1671,12 +1672,12 @@ sub format_table {
     s{<br\h*/?>\K\x{2028}}{}gi;
 }
 
-# What of a table kept intact is kept in one pane: none, row, head
-# or all
+# What of a table kept intact is kept in one pane (keep.table): none,
+# row, head or all
 sub table_keep {
-    my $keep = $config->{table_keep} || 'head';
+    my $keep = $config->{keep}{table} || 'head';
     $keep =~ /^(?:none|row|head|all)$/
-        or die "table_keep: none, row, head or all expected, not '$keep'\n";
+        or die "keep.table: none, row, head or all expected, not '$keep'\n";
     $keep;
 }
 
