@@ -653,6 +653,17 @@ subtest q(table keep option) => sub {
 	my $bad = `$mdee -n --table-keep=$keep $test_md 2>&1`;
 	like($bad, qr/--table-keep: none, row, head or all expected/, qq(--table-keep=$keep is rejected));
     }
+
+    # default[table_keep] of config.sh, which the option overrides
+    my $tmp = tempdir(CLEANUP => 1);
+    mkdir "$tmp/mdee";
+    open my $fh, q(>), "$tmp/mdee/config.sh" or die;
+    print $fh "default[table_keep]=all\n";
+    close $fh;
+    my $config = `XDG_CONFIG_HOME=$tmp COLUMNS=200 $mdee -ddn $test_md 2>&1`;
+    like($config, qr/debug: greple .*table_keep=all/, q(default[table_keep] sets the default));
+    my $option = `XDG_CONFIG_HOME=$tmp COLUMNS=200 $mdee -ddn --table-keep=head $test_md 2>&1`;
+    unlike($option, qr/table_keep=/, q(--table-keep overrides default[table_keep]));
 };
 
 subtest q(widen theme) => sub {

@@ -149,6 +149,7 @@ The `default` associative array supports:
 | `default[fold_width]` | `--fold-width` | `80` |
 | `default[base_color]` | `--base-color` | `DarkCyan` |
 | `default[lateral]` | `--lateral` | `1` |
+| `default[table_keep]` | `--table-keep` | `all` |
 
 `default[lateral]` is left out where nup cannot make the row (`-w`, rows, PDF; with `--parallel`, App::nup 1.17 puts the files side by side in one row), while `-L` given with `-w` is an error; with `--lateral` set either way, `default[width]` is not used, because `-w` after the file name would make rows of the pages again.
 

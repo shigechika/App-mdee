@@ -200,7 +200,7 @@ declare -A OPTS=(
     [        lateral | L             # all pages in one row  ]=_
     [           rule |               # table rule lines      ]=_
     [    table-style | ts :          # table style           ]=lattice
-    [     table-keep |    :          # kept in one pane      ]=head
+    [     table-keep |    :          # kept in one pane      ]=
     [          width | w  : =i       # output width          ]=0
     [     fold-width |    : =i       # fold width            ]=0
     [          runin |    : =i       # run-in width          ]=4
@@ -466,6 +466,7 @@ case $table_style in
     pipe) table_style=lattice ;;
     *) die "--table-style: lattice, 3line or simple expected, not '$table_style'" ;;
 esac
+: ${table_keep:=${default[table_keep]:-head}}
 case $table_keep in
     none|row|head|all) ;;
     *) die "--table-keep: none, row, head or all expected, not '$table_keep'" ;;
@@ -1310,6 +1311,7 @@ and may be divided anywhere.
 
 This has an effect only when tables are kept intact: with nup, when
 folding and table formatting are on, and without C<--cat-v>.
+C<default[table_keep]> in the configuration file sets the default.
 
 =item B<--cat-v>
 
@@ -1951,6 +1953,7 @@ This is a shell script that can set defaults and override colors:
     default[fold_width]=80           # set default fold width
     default[refill]=1                # join paragraph lines
     default[lateral]=1               # all pages in one row
+    default[table_keep]=all          # a table in one pane
     default[base_color]=DarkCyan     # set default base color
 
 A value which has spaces or characters special to the shell, as C<< < >>,
@@ -1973,6 +1976,8 @@ The C<default> associative array supports the following keys:
 =item C<default[refill]> - Corresponds to C<--refill> (C<1> to enable)
 
 =item C<default[lateral]> - Corresponds to C<--lateral> (C<1> to enable)
+
+=item C<default[table_keep]> - Corresponds to C<--table-keep> (e.g., C<all>)
 
 =item C<default[pane_width]> - Corresponds to C<--pane-width> (e.g., C<100>)
 
