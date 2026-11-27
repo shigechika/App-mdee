@@ -630,6 +630,31 @@ subtest q(table style option) => sub {
     }
 };
 
+# Test: table keep option
+subtest q(table keep option) => sub {
+    my $help = `$mdee --help 2>&1`;
+    like($help, qr/--table-keep=/, q(--help shows --table-keep option));
+
+    my $default = `COLUMNS=200 $mdee -ddn $test_md 2>&1`;
+    unlike($default, qr/table_keep=/, q(no table_keep parameter by default));
+    my $head = `COLUMNS=200 $mdee -ddn --table-keep=head $test_md 2>&1`;
+    unlike($head, qr/table_keep=/, q(--table-keep=head is the default));
+
+    for my $keep (qw(none row all)) {
+	my $out = `COLUMNS=200 $mdee -ddn --table-keep=$keep $test_md 2>&1`;
+	like($out, qr/debug: greple .*table_keep=$keep/, qq(--table-keep=$keep is passed to the md module));
+    }
+
+    # only when tables are kept intact
+    my $nonup = `COLUMNS=200 $mdee -ddn --no-nup --table-keep=all $test_md 2>&1`;
+    unlike($nonup, qr/table_keep=/, q(--table-keep is not passed without nup));
+
+    for my $keep (qw(header unknown)) {
+	my $bad = `$mdee -n --table-keep=$keep $test_md 2>&1`;
+	like($bad, qr/--table-keep: none, row, head or all expected/, qq(--table-keep=$keep is rejected));
+    }
+};
+
 subtest q(widen theme) => sub {
     my $out = `COLUMNS=200 $mdee -n -t widen $test_md 2>&1`;
     like($out, qr/--begin '&widen\(chars=2460-24FF:1F5D1\)' --/, q(gives the function and the characters to the md module));

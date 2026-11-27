@@ -44,6 +44,7 @@ mdee - em·dee, Markdown Easy on the Eyes
      -L  --[no-]lateral     all pages in one row, scrolled sideways
          --[no-]rule        use Unicode rules for tables (default: on)
     --ts --table-style=#    table style: lattice, 3line or simple (default: lattice)
+         --table-keep=#     kept in one pane: none, row, head or all (default: head)
          --cat-v            visualize whitespace via cat-v
          --[no-]image[=#]   image types to show (default: png,jpeg,gif)
      -w  --width=#          output width (default: terminal width)
@@ -199,6 +200,7 @@ declare -A OPTS=(
     [        lateral | L             # all pages in one row  ]=_
     [           rule |               # table rule lines      ]=_
     [    table-style | ts :          # table style           ]=lattice
+    [     table-keep |    :          # kept in one pane      ]=head
     [          width | w  : =i       # output width          ]=0
     [     fold-width |    : =i       # fold width            ]=0
     [          runin |    : =i       # run-in width          ]=4
@@ -464,6 +466,10 @@ case $table_style in
     pipe) table_style=lattice ;;
     *) die "--table-style: lattice, 3line or simple expected, not '$table_style'" ;;
 esac
+case $table_keep in
+    none|row|head|all) ;;
+    *) die "--table-keep: none, row, head or all expected, not '$table_keep'" ;;
+esac
 case $boundary in
     word|space|none) ;;
     *) die "--boundary: word, space or none expected, not '$boundary'" ;;
@@ -637,6 +643,7 @@ run_greple() {
     [[ $trim  ]] && config_params+=("table_trim=1") || config_params+=("table_trim=0")
     [[ $rule  ]] && config_params+=("rule=1")  || config_params+=("rule=0")
     [[ $table_style != lattice ]] && config_params+=("table_style=$table_style")
+    [[ $_intact && $table_keep != head ]] && config_params+=("table_keep=$table_keep")
     [[ $heading_markup ]] && config_params+=("heading_markup=$heading_markup")
     [[ $refill ]] && config_params+=("refill=1")
 
@@ -1271,6 +1278,38 @@ last of them is the column separator, and the others are spaces at the
 right of the cell.  With C<table_gap=2> a cell of C<lattice> has a
 space on both sides; the spaces at the right end of the table are then
 left out when the table does not fit the width with them.
+
+=item B<--table-keep>=I<WHAT>
+
+Tell what of a table is kept in one pane of nup, so that a pane does
+not end inside it (default: C<head>).  The table goes to the next pane
+when that part does not fit in the rest of the pane.
+
+=over 4
+
+=item C<none>
+
+Nothing: a pane may end between any two lines of a table.
+
+=item C<row>
+
+The lines of a row, which has more than one line when a cell is
+wrapped.
+
+=item C<head>
+
+Also the header, the rule below it and the first row, and with
+C<3line> and C<simple>, the last row and the rule below it.
+
+=item C<all>
+
+The whole table.  A table longer than a pane is laid out as lines,
+and may be divided anywhere.
+
+=back
+
+This has an effect only when tables are kept intact: with nup, when
+folding and table formatting are on, and without C<--cat-v>.
 
 =item B<--cat-v>
 
