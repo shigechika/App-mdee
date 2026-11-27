@@ -25,6 +25,7 @@ mdee - em·dee, Markdown Easy on the Eyes
      -L  --[no-]lateral     all pages in one row, scrolled sideways
          --[no-]rule        use Unicode rules for tables (default: on)
     --ts --table-style=#    table style: lattice, 3line or simple (default: lattice)
+         --keep TYPE=WHAT   kept in one pane: table=none|row|head|all (default: table=head)
          --cat-v            visualize whitespace via cat-v
          --[no-]image[=#]   image types to show (default: png,jpeg,gif)
      -w  --width=#          output width (default: terminal width)
@@ -445,6 +446,39 @@ Use [tecolicom/tap](https://github.com/tecolicom/homebrew-tap):
     right of the cell.  With `table_gap=2` a cell of `lattice` has a
     space on both sides; the spaces at the right end of the table are then
     left out when the table does not fit the width with them.
+
+- **--keep** _TYPE_=_WHAT_\[,...\]
+
+    Tell what of a block of the _TYPE_ is kept in one pane of nup, so
+    that a pane does not end inside it.  The block goes to the next pane
+    when that part does not fit in the rest of the pane.  The option can
+    be repeated, and the settings can be joined by commas:
+    `--keep table=all`.  `table` is the only _TYPE_ for now, with
+    these values of _WHAT_ (default: `head`):
+
+    - `none`
+
+        Nothing: a pane may end between any two lines of a table.
+
+    - `row`
+
+        The lines of a row, which has more than one line when a cell is
+        wrapped.
+
+    - `head`
+
+        Also the header, the rule below it and the first row, and with
+        `3line` and `simple`, the last row and the rule below it.
+
+    - `all`
+
+        The whole table.  A table longer than a pane is laid out as lines,
+        and may be divided anywhere.
+
+    This has an effect only when tables are kept intact: with nup, when
+    folding and table formatting are on, and without `--cat-v`.
+    `default[keep]` in the configuration file gives the settings of the
+    types not given on the command line: `default[keep]=table=all`.
 
 - **--cat-v**
 
@@ -1037,6 +1071,7 @@ This is a shell script that can set defaults and override colors:
     default[fold_width]=80           # set default fold width
     default[refill]=1                # join paragraph lines
     default[lateral]=1               # all pages in one row
+    default[keep]=table=all          # a table in one pane
     default[base_color]=DarkCyan     # set default base color
 
 A value which has spaces or characters special to the shell, as `<`,
@@ -1051,6 +1086,7 @@ The `default` associative array supports the following keys:
 - `default[fold_width]` - Corresponds to `--fold-width` (e.g., `80`)
 - `default[refill]` - Corresponds to `--refill` (`1` to enable)
 - `default[lateral]` - Corresponds to `--lateral` (`1` to enable)
+- `default[keep]` - Corresponds to `--keep` (e.g., `table=all`)
 - `default[pane_width]` - Corresponds to `--pane-width` (e.g., `100`)
 - `default[pane]` - Corresponds to `--pane` (e.g., `2` or `2,2`)
 - `default[base_color]` - Corresponds to `--base-color` (e.g., `DarkCyan`)
